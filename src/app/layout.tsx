@@ -1,5 +1,6 @@
-﻿import './globals.css';   
-import './galeria.css';   // Importamos los estilos de la galerÃ­a
+﻿// src/app/layout.tsx
+import './globals.css';
+import './galeria.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import NavBar from '../components/NavBar';

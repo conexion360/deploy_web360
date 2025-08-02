@@ -37,14 +37,29 @@ const NavBar: React.FC = () => {
     >
       <nav className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
-          {/* Logo */}
+          {/* Logo - Corregido para mantener proporción */}
           <div className="text-white font-bold text-xl md:text-2xl relative group">
             <Image 
               src="/imagenes/conexion_logo.png" 
               alt="Conexion360 Logo" 
               width={144} 
               height={48}
-              className="h-12 w-auto" 
+              style={{ width: 'auto', height: '48px' }}
+              onError={(e) => {
+                // Fallback si la imagen no se puede cargar
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; // Prevenir loop infinito
+                target.style.display = 'none';
+                
+                // Crear elemento de texto como fallback
+                const parent = target.parentElement;
+                if (parent) {
+                  const fallback = document.createElement('div');
+                  fallback.textContent = 'CONEXION 360';
+                  fallback.className = 'text-2xl font-bold text-white';
+                  parent.appendChild(fallback);
+                }
+              }}
             />
           </div>
           

@@ -146,13 +146,3 @@ CREATE TABLE IF NOT EXISTS logs (
     ip VARCHAR(45),
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Inserta un usuario administrador por defecto (password: admin123)
-INSERT INTO usuarios (nombre, email, password, rol) 
-VALUES ('Administrador', 'admin@conexion360sac.com', '$2a$10$Ck6VzMRWF8bF7nUXFU9JzeQLVk1PEsKrFS7Azlb0xNz3S9FQUn.Ra', 'superadmin')
-ON CONFLICT (email) DO NOTHING;
-
--- Insertar configuración inicial del sitio
-INSERT INTO configuracion (nombre_sitio, email_contacto, footer_texto) 
-VALUES ('Conexion 360 SAC', 'gerencia@conexion360sac.com', '© 2025 Conexion 360 SAC. Todos los derechos reservados.')
-ON CONFLICT DO NOTHING;
