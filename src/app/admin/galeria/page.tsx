@@ -132,13 +132,22 @@ export default function GaleriaAdmin() {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">Galería de Imágenes</h1>
-          <Link 
-            href="/admin/galeria/nueva" 
-            className="bg-secondary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-secondary-light transition-colors"
-          >
-            <span className="material-icons-outlined">add</span>
-            <span>Agregar Imagen</span>
-          </Link>
+          <div className="flex space-x-2">
+            <Link 
+              href="/admin/galeria/bulk-upload" 
+              className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-primary-light transition-colors"
+            >
+              <span className="material-icons-outlined">file_upload</span>
+              <span>Carga Masiva</span>
+            </Link>
+            <Link 
+              href="/admin/galeria/nueva" 
+              className="bg-secondary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-secondary-light transition-colors"
+            >
+              <span className="material-icons-outlined">add</span>
+              <span>Agregar Imagen</span>
+            </Link>
+          </div>
         </div>
 
         {error && (
