@@ -1,7 +1,16 @@
+"use client"
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const FooterSection: React.FC = () => {
+  const pathname = usePathname(); // Obtener la ruta actual
+  
+  // No mostrar el Footer en rutas que comiencen con /admin
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <footer className="bg-primary-dark text-white">
       <div className="container mx-auto px-4 py-12">

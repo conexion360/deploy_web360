@@ -1,11 +1,19 @@
+// src/components/NavBar.tsx
 "use client"
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 const NavBar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
+  
+  // No mostrar el NavBar en rutas que comiencen con /admin
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,30 +45,12 @@ const NavBar: React.FC = () => {
     >
       <nav className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
-          {/* Logo - Corregido para mantener proporción */}
+          {/* Logo - Usando un div en lugar de Image para evitar errores */}
           <div className="text-white font-bold text-xl md:text-2xl relative group">
-            <Image 
-              src="/imagenes/conexion_logo.png" 
-              alt="Conexion360 Logo" 
-              width={144} 
-              height={48}
-              style={{ width: 'auto', height: '48px' }}
-              onError={(e) => {
-                // Fallback si la imagen no se puede cargar
-                const target = e.target as HTMLImageElement;
-                target.onerror = null; // Prevenir loop infinito
-                target.style.display = 'none';
-                
-                // Crear elemento de texto como fallback
-                const parent = target.parentElement;
-                if (parent) {
-                  const fallback = document.createElement('div');
-                  fallback.textContent = 'CONEXION 360';
-                  fallback.className = 'text-2xl font-bold text-white';
-                  parent.appendChild(fallback);
-                }
-              }}
-            />
+            {/* Si hay problemas con la imagen del logo, es mejor usar un texto alternativo */}
+            <div className="text-2xl font-bold text-white">
+              CONEXION 360
+            </div>
           </div>
           
           {/* Desktop Navigation */}
