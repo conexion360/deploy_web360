@@ -1,5 +1,5 @@
+// src/components/AboutSection.tsx
 import React from 'react';
-import Image from 'next/image';
 
 const AboutSection: React.FC = () => {
   return (
@@ -52,18 +52,12 @@ const AboutSection: React.FC = () => {
           
           <div className="relative group reveal-on-scroll">
             <div className="absolute -inset-4 bg-gradient-to-r from-secondary/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="relative overflow-hidden rounded-2xl">
-              <Image 
-                src="/imagenes/eventos/conexion_360.png"
-                alt="Equipo de trabajo en evento"
-                width={600}
-                height={400}
-                className="w-full h-auto object-cover rounded-2xl transform group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                <p className="text-white text-lg font-semibold">Muchos eventos producidos con éxito</p>
+            <div className="relative overflow-hidden rounded-2xl bg-primary-dark/50 h-80 flex items-center justify-center">
+              <div className="text-center p-6">
+                <div className="text-6xl mb-4">🎵</div>
+                <p className="text-gray-300">Las imágenes de eventos se mostrarán aquí</p>
               </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500"></div>
             </div>
           </div>
         </div>

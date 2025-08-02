@@ -1,29 +1,26 @@
-import React from 'react'
+// src/components/GenresSection.tsx
+import React from 'react';
 
 const GenresSection = () => {
   const genres = [
     {
       id: 1,
       name: 'Rock',
-      image: '/imagenes/eventos/genero_rock.jpg',
       description: 'Conciertos y festivales de Rock'
     },
     {
       id: 2,
       name: 'Cumbia',
-      image: '/imagenes/eventos/genero_cumbia.jpg',
       description: 'Eventos y giras de Cumbia.'
     },
     {
       id: 3,
       name: 'Salsa',
-      image: '/imagenes/eventos/genero_salsa.jpg',
       description: 'Salsa con los mejores.'
     },
     {
       id: 4,
       name: 'Folklore - Andino',
-      image: '/imagenes/eventos/musica_andina.jpg',
       description: 'Festivales de música tradicional peruana.'
     }
   ];
@@ -54,13 +51,15 @@ const GenresSection = () => {
               className="reveal-on-scroll"
             >
               <div className="group relative rounded-2xl overflow-hidden cursor-pointer transform transition-all duration-500 hover:scale-105">
-                {/* Card Background & Image */}
+                {/* Card Background with colored gradient instead of image */}
                 <div className="relative aspect-[3/4] overflow-hidden">
-                  <img 
-                    src={genre.image} 
-                    alt={genre.name} 
-                    className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
-                  />
+                  <div className="w-full h-full bg-primary-dark flex items-center justify-center">
+                    <div className="text-6xl mb-4">{
+                      genre.name === 'Rock' ? '🎸' : 
+                      genre.name === 'Cumbia' ? '💃' : 
+                      genre.name === 'Salsa' ? '🎺' : '🪘'
+                    }</div>
+                  </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500"></div>
                 </div>
 

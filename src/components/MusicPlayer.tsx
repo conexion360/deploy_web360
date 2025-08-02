@@ -1,3 +1,5 @@
+
+// src/components/MusicPlayer.tsx
 "use client"
 import React, { useState, useEffect, useRef } from 'react';
 
@@ -5,6 +7,7 @@ const MusicPlayer: React.FC = () => {
   const [currentTrack, setCurrentTrack] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [tracksAvailable, setTracksAvailable] = useState<boolean[]>([false, false, false]);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -24,6 +27,25 @@ const MusicPlayer: React.FC = () => {
     }
   ];
 
+  // Check if tracks exist
+  useEffect(() => {
+    const checkTracks = async () => {
+      const availabilityPromises = playlist.map(async (track, index) => {
+        try {
+          const response = await fetch(track.file, { method: 'HEAD' });
+          return response.ok;
+        } catch (error) {
+          return false;
+        }
+      });
+
+      const availability = await Promise.all(availabilityPromises);
+      setTracksAvailable(availability);
+    };
+
+    checkTracks();
+  }, []);
+
   useEffect(() => {
     // Cleanup on unmount
     return () => {
@@ -37,7 +59,7 @@ const MusicPlayer: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && tracksAvailable[currentTrack]) {
       audioRef.current.src = playlist[currentTrack].file;
       
       if (isPlaying) {
@@ -47,7 +69,7 @@ const MusicPlayer: React.FC = () => {
         });
       }
     }
-  }, [currentTrack, playlist]);
+  }, [currentTrack, tracksAvailable]);
 
   const startProgressTimer = () => {
     if (intervalRef.current) {
@@ -63,6 +85,11 @@ const MusicPlayer: React.FC = () => {
   };
 
   const playTrack = () => {
+    // If no tracks are available, do nothing
+    if (!tracksAvailable.some(available => available)) {
+      return;
+    }
+
     if (!audioRef.current) {
       audioRef.current = new Audio(playlist[currentTrack].file);
       audioRef.current.addEventListener('ended', nextTrack);
@@ -85,18 +112,33 @@ const MusicPlayer: React.FC = () => {
   };
 
   const prevTrack = () => {
-    setCurrentTrack((prev) => (prev - 1 + playlist.length) % playlist.length);
+    // Find previous available track
+    let newIndex = currentTrack;
+    do {
+      newIndex = (newIndex - 1 + playlist.length) % playlist.length;
+      if (tracksAvailable[newIndex]) break;
+    } while (newIndex !== currentTrack);
+    
+    setCurrentTrack(newIndex);
   };
 
   const nextTrack = () => {
-    setCurrentTrack((prev) => (prev + 1) % playlist.length);
+    // Find next available track
+    let newIndex = currentTrack;
+    do {
+      newIndex = (newIndex + 1) % playlist.length;
+      if (tracksAvailable[newIndex]) break;
+    } while (newIndex !== currentTrack);
+    
+    setCurrentTrack(newIndex);
   };
 
   return (
     <div className="bg-white/10 backdrop-blur-md rounded-lg p-2 flex items-center space-x-2 max-w-[400px]">
       <button 
         onClick={prevTrack}
-        className="text-white/80 hover:text-white transition-colors"
+        className={`text-white/80 hover:text-white transition-colors ${!tracksAvailable.some(available => available) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={!tracksAvailable.some(available => available)}
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
           <path d="M19 6L9 12L19 18V6Z"></path>
@@ -106,7 +148,8 @@ const MusicPlayer: React.FC = () => {
 
       <button 
         onClick={playTrack}
-        className="bg-secondary hover:bg-secondary-light text-white rounded-full p-1.5 transition-all transform hover:scale-105"
+        className={`bg-secondary hover:bg-secondary-light text-white rounded-full p-1.5 transition-all transform hover:scale-105 ${!tracksAvailable.some(available => available) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={!tracksAvailable.some(available => available)}
       >
         {!isPlaying ? (
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -121,7 +164,8 @@ const MusicPlayer: React.FC = () => {
 
       <button 
         onClick={nextTrack}
-        className="text-white/80 hover:text-white transition-colors"
+        className={`text-white/80 hover:text-white transition-colors ${!tracksAvailable.some(available => available) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={!tracksAvailable.some(available => available)}
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
           <path d="M5 18L15 12L5 6V18Z"></path>
@@ -132,8 +176,16 @@ const MusicPlayer: React.FC = () => {
       <div className="flex-grow flex items-center min-w-0 overflow-hidden">
         <div className="marquee-container">
           <div className="marquee-content">
-            <span className="text-xs text-white/90">{playlist[currentTrack].title}</span>
-            <span className="text-xs text-white/90">{playlist[currentTrack].title}</span>
+            <span className="text-xs text-white/90">
+              {tracksAvailable.some(available => available) 
+                ? playlist[currentTrack].title
+                : "Música disponible después de la configuración"}
+            </span>
+            <span className="text-xs text-white/90">
+              {tracksAvailable.some(available => available) 
+                ? playlist[currentTrack].title
+                : "Música disponible después de la configuración"}
+            </span>
           </div>
         </div>
       </div>

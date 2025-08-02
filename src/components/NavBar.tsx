@@ -2,7 +2,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 const NavBar: React.FC = () => {
@@ -45,12 +44,10 @@ const NavBar: React.FC = () => {
     >
       <nav className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
-          {/* Logo - Usando un div en lugar de Image para evitar errores */}
+          {/* Text Logo */}
           <div className="text-white font-bold text-xl md:text-2xl relative group">
-            {/* Si hay problemas con la imagen del logo, es mejor usar un texto alternativo */}
-            <div className="text-2xl font-bold text-white">
-              CONEXION 360
-            </div>
+            <span className="text-white">CONEXION</span>
+            <span className="text-secondary"> 360</span>
           </div>
           
           {/* Desktop Navigation */}
