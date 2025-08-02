@@ -197,6 +197,12 @@ export default function SobreNosotrosAdmin() {
       setError('');
       setSuccess('');
       
+      // Recuperar el token de autenticación
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('No hay sesión activa. Por favor, inicie sesión nuevamente.');
+      }
+      
       let imagenUrl = formData.imagen;
       
       // Subir nueva imagen si se ha seleccionado
@@ -204,11 +210,12 @@ export default function SobreNosotrosAdmin() {
         const formDataUpload = new FormData();
         formDataUpload.append('file', imagen);
         formDataUpload.append('folder', 'nosotros');
+        formDataUpload.append('quality', '85'); // Calidad WebP 85%
         
         const uploadResponse = await fetch('/api/upload', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            'Authorization': `Bearer ${token}`
           },
           body: formDataUpload
         });
@@ -219,6 +226,11 @@ export default function SobreNosotrosAdmin() {
         
         const uploadData = await uploadResponse.json();
         imagenUrl = uploadData.url;
+        
+        console.log("Imagen convertida a WebP y subida:", {
+          url: uploadData.url,
+          format: uploadData.format || 'webp'
+        });
       }
       
       // Guardar toda la información
@@ -226,7 +238,7 @@ export default function SobreNosotrosAdmin() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           ...formData,
@@ -247,9 +259,14 @@ export default function SobreNosotrosAdmin() {
       }
       
       setSuccess('Información guardada correctamente');
-      setTimeout(() => setSuccess(''), 3000);
+      
+      // Recargar la página después de un breve retraso para ver los cambios
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
       
     } catch (error: any) {
+      console.error('Error al guardar información:', error);
       setError(error.message || 'Error al guardar la información');
     } finally {
       setSaving(false);
@@ -333,7 +350,7 @@ export default function SobreNosotrosAdmin() {
                         htmlFor="imagen"
                         className="bg-gray-100 border border-gray-300 rounded-md px-4 py-2 cursor-pointer hover:bg-gray-200 transition-colors"
                       >
-                        Seleccionar imagen
+                        {preview ? "Cambiar imagen" : "Seleccionar imagen"}
                       </label>
                       {preview && (
                         <div className="h-20 w-32 bg-gray-200 rounded overflow-hidden">
@@ -346,7 +363,7 @@ export default function SobreNosotrosAdmin() {
                       )}
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Tamaño recomendado: 800x600px
+                      Tamaño recomendado: 800x600px (se convertirá a WebP para mejor rendimiento)
                     </p>
                   </div>
                 </div>
@@ -372,7 +389,7 @@ export default function SobreNosotrosAdmin() {
                 ) : (
                   <div className="space-y-4">
                     {formData.caracteristicas.map((caract, index) => (
-                      <div key={index} className="flex items-start space-x-4 border border-gray-200 p-4 rounded-lg">
+                      <div key={caract.id || index} className="flex items-start space-x-4 border border-gray-200 p-4 rounded-lg">
                         <div className="flex-1">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -446,7 +463,7 @@ export default function SobreNosotrosAdmin() {
                 ) : (
                   <div className="space-y-4">
                     {formData.estadisticas.map((stat, index) => (
-                      <div key={index} className="flex items-start space-x-4 border border-gray-200 p-4 rounded-lg">
+                      <div key={stat.id || index} className="flex items-start space-x-4 border border-gray-200 p-4 rounded-lg">
                         <div className="flex-1">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>

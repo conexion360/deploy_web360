@@ -1,6 +1,6 @@
 // src/app/admin/hero/nuevo/page.tsx
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '../../components/AdminLayout';
 
@@ -19,6 +19,8 @@ export default function NuevoHeroSlide() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   
   const router = useRouter();
 
@@ -65,67 +67,125 @@ export default function NuevoHeroSlide() {
     try {
       setLoading(true);
       setError('');
+      setSuccess('');
+      setDebugInfo(null);
       
-      // Subir imagen desktop
+      // Recuperar el token de autenticación
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('No hay sesión activa. Por favor, inicie sesión nuevamente.');
+      }
+      
+      // Subir imagen desktop - Configurada para WebP y con dimensiones específicas
       const formDataDesktop = new FormData();
       formDataDesktop.append('file', imagenDesktop);
       formDataDesktop.append('folder', 'hero');
+      formDataDesktop.append('quality', '85'); // Calidad WebP 85%
+      formDataDesktop.append('width', '1920'); // Ancho máximo
+      
+      // Log para depurar
+      console.log("Subiendo imagen desktop como WebP...");
       
       const uploadDesktopResponse = await fetch('/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${token}`
         },
         body: formDataDesktop
       });
       
-      if (!uploadDesktopResponse.ok) {
-        throw new Error('Error al subir la imagen desktop');
+      // Capturar información de debug
+      let desktopResponseData;
+      try {
+        desktopResponseData = await uploadDesktopResponse.json();
+      } catch (e) {
+        desktopResponseData = { error: "No se pudo parsear la respuesta" };
       }
       
-      const desktopData = await uploadDesktopResponse.json();
+      if (!uploadDesktopResponse.ok) {
+        setDebugInfo({
+          desktop: {
+            status: uploadDesktopResponse.status,
+            statusText: uploadDesktopResponse.statusText,
+            data: desktopResponseData
+          }
+        });
+        throw new Error(`Error al subir la imagen desktop: ${uploadDesktopResponse.status} ${uploadDesktopResponse.statusText}`);
+      }
       
-      // Subir imagen mobile
+      // Subir imagen mobile - Configurada para WebP y con dimensiones específicas
       const formDataMobile = new FormData();
       formDataMobile.append('file', imagenMobile);
       formDataMobile.append('folder', 'hero');
+      formDataMobile.append('quality', '85'); // Calidad WebP 85%
+      formDataMobile.append('width', '768'); // Ancho máximo para móviles
+      
+      console.log("Subiendo imagen mobile como WebP...");
       
       const uploadMobileResponse = await fetch('/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${token}`
         },
         body: formDataMobile
       });
       
-      if (!uploadMobileResponse.ok) {
-        throw new Error('Error al subir la imagen mobile');
+      // Capturar información de debug
+      let mobileResponseData;
+      try {
+        mobileResponseData = await uploadMobileResponse.json();
+      } catch (e) {
+        mobileResponseData = { error: "No se pudo parsear la respuesta" };
       }
       
-      const mobileData = await uploadMobileResponse.json();
+      if (!uploadMobileResponse.ok) {
+        setDebugInfo({
+          ...debugInfo,
+          mobile: {
+            status: uploadMobileResponse.status,
+            statusText: uploadMobileResponse.statusText,
+            data: mobileResponseData
+          }
+        });
+        throw new Error(`Error al subir la imagen mobile: ${uploadMobileResponse.status} ${uploadMobileResponse.statusText}`);
+      }
       
-      // Crear el slide en la API
+      // Mostrar información sobre el formato convertido
+      setSuccess(`Imágenes convertidas a WebP correctamente. 
+        Desktop: ${desktopResponseData?.format || 'webp'}, 
+        Mobile: ${mobileResponseData?.format || 'webp'}`);
+      
+      // Ahora crea el slide con las URLs de las imágenes
+      console.log("Creando slide en la base de datos...");
+      
       const response = await fetch('/api/hero', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           ...formData,
-          imagen_desktop: desktopData.url,
-          imagen_mobile: mobileData.url
+          imagen_desktop: desktopResponseData.url,
+          imagen_mobile: mobileResponseData.url
         })
       });
       
       if (!response.ok) {
-        throw new Error('Error al crear el slide');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al crear el slide');
       }
       
-      // Redireccionar a la página de administración de slides
-      router.push('/admin/hero');
+      // Mostrar mensaje de éxito y luego redireccionar
+      setSuccess(success + " Slide creado exitosamente. Redirigiendo...");
+      
+      // Redireccionar después de un breve retraso para que el usuario vea el mensaje
+      setTimeout(() => {
+        router.push('/admin/hero');
+      }, 1500);
       
     } catch (error: any) {
+      console.error("Error completo:", error);
       setError(error.message || 'Error al crear el slide');
     } finally {
       setLoading(false);
@@ -149,6 +209,19 @@ export default function NuevoHeroSlide() {
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            {success}
+          </div>
+        )}
+        
+        {debugInfo && (
+          <div className="bg-gray-100 border border-gray-400 text-gray-700 px-4 py-3 rounded mb-4 overflow-auto">
+            <h3 className="font-bold mb-2">Información de depuración:</h3>
+            <pre className="text-xs">{JSON.stringify(debugInfo, null, 2)}</pre>
           </div>
         )}
 
@@ -229,7 +302,7 @@ export default function NuevoHeroSlide() {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Tamaño recomendado: 1920x1080px
+                  Tamaño recomendado: 1920x1080px (se convertirá a WebP)
                 </p>
               </div>
               
@@ -262,7 +335,7 @@ export default function NuevoHeroSlide() {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Tamaño recomendado: 768x1024px
+                  Tamaño recomendado: 768x1024px (se convertirá a WebP)
                 </p>
               </div>
               
