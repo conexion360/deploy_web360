@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@conexion360sac.com');
+  const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>(null);
@@ -22,6 +22,22 @@ export default function AdminLogin() {
       router.push('/admin/dashboard');
     }
   }, [router]);
+
+  const handleTestDBConnection = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/test-db');
+      const data = await response.json();
+      
+      setDebugInfo({
+        dbTest: data
+      });
+    } catch (error: any) {
+      setError('Error al verificar la conexión a la DB: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +98,36 @@ export default function AdminLogin() {
     } catch (err: any) {
       console.error('Error durante el inicio de sesión:', err);
       setError(err.message || 'Error en el inicio de sesión. Intente nuevamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función para probar la autenticación con el endpoint de depuración
+  const handleDebugAuth = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Llamada al endpoint de depuración
+      const response = await fetch('/api/auth-debug', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      const data = await response.json();
+      
+      setDebugInfo({
+        debugAuth: data,
+        status: response.status,
+        statusText: response.statusText
+      });
+      
+    } catch (err: any) {
+      setError('Error al realizar la prueba de depuración: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -174,17 +220,39 @@ export default function AdminLogin() {
               'Iniciar Sesión'
             )}
           </button>
-          
-          {/* Sección de información de depuración - solo se muestra si hay un error */}
-          {debugInfo && (
-            <div className="mt-6 text-xs text-gray-400 border-t border-gray-700 pt-4">
-              <p className="font-semibold mb-1">Información de depuración:</p>
-              <pre className="bg-black/30 p-2 rounded overflow-auto max-h-32">
-                {JSON.stringify(debugInfo, null, 2)}
-              </pre>
-            </div>
-          )}
         </form>
+        
+        {/* Herramientas de depuración */}
+        <div className="mt-8 pt-6 border-t border-gray-700">
+          <h3 className="text-sm text-gray-400 font-semibold mb-3">Herramientas de Depuración</h3>
+          <div className="flex flex-col space-y-2">
+            <button 
+              onClick={handleTestDBConnection}
+              disabled={loading}
+              className="bg-blue-500/30 hover:bg-blue-500/50 text-blue-100 text-xs py-2 px-3 rounded-md transition-colors"
+            >
+              Verificar Conexión a DB
+            </button>
+            
+            <button 
+              onClick={handleDebugAuth}
+              disabled={loading}
+              className="bg-purple-500/30 hover:bg-purple-500/50 text-purple-100 text-xs py-2 px-3 rounded-md transition-colors"
+            >
+              Probar Autenticación (Debug)
+            </button>
+          </div>
+        </div>
+        
+        {/* Sección de información de depuración - solo se muestra si hay un error */}
+        {debugInfo && (
+          <div className="mt-6 text-xs text-gray-400 border-t border-gray-700 pt-4">
+            <p className="font-semibold mb-1">Información de depuración:</p>
+            <pre className="bg-black/30 p-2 rounded overflow-auto max-h-64">
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          </div>
+        )}
         
         {/* Nota para el desarrollador */}
         <div className="mt-6 text-center text-xs text-gray-400">

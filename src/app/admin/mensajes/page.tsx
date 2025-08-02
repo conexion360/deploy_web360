@@ -381,14 +381,14 @@ export default function MensajesAdmin() {
                   
                   <div className="p-4 border-t border-gray-200 bg-gray-50">
                     <div className="flex items-center space-x-2">
-                      
+                      <a
                         href={`mailto:${selectedMessage.email}?subject=Re: Mensaje desde Conexion 360`}
                         className="bg-secondary text-white px-4 py-2 rounded-md hover:bg-secondary-light transition-colors"
                       >
                         Responder por email
                       </a>
                       {selectedMessage.telefono && (
-                        
+                        <a
                           href={`https://wa.me/${selectedMessage.telefono.replace(/[^0-9]/g, '')}`}
                           target="_blank"
                           rel="noopener noreferrer"

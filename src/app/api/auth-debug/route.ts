@@ -9,19 +9,69 @@ export async function POST(request: NextRequest) {
     
     console.log('Debug login attempt:', { email });
 
+    // Primero, verificar la conexión a la base de datos
+    let dbStatus;
+    try {
+      const testConnection = await db.query('SELECT NOW()');
+      dbStatus = {
+        connected: true,
+        timestamp: testConnection.rows[0].now
+      };
+    } catch (dbError: any) {
+      dbStatus = {
+        connected: false,
+        error: dbError.message
+      };
+      
+      return NextResponse.json({
+        success: false,
+        error: 'Error de conexión a la base de datos',
+        step: 'db_connection',
+        dbStatus
+      });
+    }
+
     // Buscar usuario por email
-    const userResult = await db.query(
-      'SELECT * FROM usuarios WHERE email = $1',
-      [email]
-    );
+    let userResult;
+    try {
+      userResult = await db.query(
+        'SELECT * FROM usuarios WHERE email = $1',
+        [email]
+      );
+    } catch (queryError: any) {
+      return NextResponse.json({
+        success: false,
+        error: 'Error al consultar usuario',
+        step: 'user_query',
+        dbStatus,
+        queryError: queryError.message
+      });
+    }
 
     if (userResult.rows.length === 0) {
       console.log('Usuario no encontrado');
-      return NextResponse.json({
-        success: false,
-        error: 'Usuario no encontrado',
-        step: 'email_check'
-      });
+      
+      // Intentar obtener todos los usuarios para depuración
+      try {
+        const allUsers = await db.query('SELECT id, nombre, email, rol FROM usuarios');
+        
+        return NextResponse.json({
+          success: false,
+          error: 'Usuario no encontrado',
+          step: 'email_check',
+          dbStatus,
+          usersInDB: allUsers.rows.length,
+          allUsers: allUsers.rows
+        });
+      } catch (error: any) {
+        return NextResponse.json({
+          success: false,
+          error: 'Usuario no encontrado y error al listar usuarios',
+          step: 'email_check',
+          dbStatus,
+          queryError: error.message
+        });
+      }
     }
 
     const user = userResult.rows[0];
@@ -29,7 +79,26 @@ export async function POST(request: NextRequest) {
 
     // Verificar contraseña
     console.log('Verificando contraseña...');
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    let passwordMatch;
+    try {
+      passwordMatch = await bcrypt.compare(password, user.password);
+    } catch (bcryptError: any) {
+      return NextResponse.json({
+        success: false,
+        error: 'Error al verificar contraseña',
+        step: 'password_verification',
+        dbStatus,
+        bcryptError: bcryptError.message,
+        passwordProvided: {
+          length: password.length,
+          value: password.substring(0, 3) + '***'
+        },
+        storedHash: {
+          length: user.password.length,
+          value: user.password.substring(0, 10) + '***'
+        }
+      });
+    }
     
     if (!passwordMatch) {
       console.log('Contraseña incorrecta');
@@ -37,8 +106,10 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Contraseña incorrecta',
         step: 'password_check',
+        dbStatus,
         passwordLength: password.length,
-        dbPasswordHash: user.password
+        dbPasswordHash: user.password,
+        passwordHashPrefix: user.password.substring(0, 10)
       });
     }
 
@@ -47,6 +118,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Autenticación exitosa en depuración',
+      dbStatus,
       user: {
         id: user.id,
         nombre: user.nombre,
