@@ -1,1 +1,7 @@
 node_modules
+# Ignorar archivos temporales y sensibles
+.next
+node_modules
+.env
+*.log
+.DS_Store
