@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (userResult.rows.length === 0) {
+      console.log(`Usuario no encontrado: ${email}`);
       return NextResponse.json(
         { error: 'Credenciales inválidas' },
         { status: 401 }
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
     // Verificar contraseña
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
+      console.log(`Contraseña incorrecta para usuario: ${email}`);
       return NextResponse.json(
         { error: 'Credenciales inválidas' },
         { status: 401 }
@@ -38,7 +40,12 @@ export async function POST(request: NextRequest) {
       [user.id]
     );
 
-    // Generar token JWT
+    // Generar token JWT usando la clave de .env
+    const jwtSecret = process.env.JWT_SECRET || 'secret_key';
+    if (!jwtSecret) {
+      console.error('JWT_SECRET no está definido en las variables de entorno');
+    }
+
     const token = jwt.sign(
       {
         id: user.id,
@@ -46,9 +53,11 @@ export async function POST(request: NextRequest) {
         email: user.email,
         rol: user.rol
       },
-      process.env.JWT_SECRET || 'secret_key',
+      jwtSecret,
       { expiresIn: '8h' }
     );
+
+    console.log(`Inicio de sesión exitoso para: ${email}`);
 
     // Devolver respuesta exitosa
     return NextResponse.json({
@@ -60,10 +69,10 @@ export async function POST(request: NextRequest) {
         rol: user.rol
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error en login:', error);
     return NextResponse.json(
-      { error: 'Error en el servidor' },
+      { error: 'Error en el servidor: ' + (error.message || 'Desconocido') },
       { status: 500 }
     );
   }

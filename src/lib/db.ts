@@ -3,13 +3,18 @@ import { Pool } from 'pg';
 
 // Configuración de la conexión a PostgreSQL
 const pool = new Pool({
-  user: 'postgres',
-  password: '123456',
-  host: 'localhost',
-  port: 5432,
-  database: 'conexion360',
-  // Solo habilitar SSL en producción si es necesario
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || '123456',
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'conexion360',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
+console.log('Connecting to database:', {
+  user: process.env.DB_USER || 'postgres',
+  host: process.env.DB_HOST || 'localhost',
+  database: process.env.DB_NAME || 'conexion360',
 });
 
 // Exportamos el pool para usarlo en los endpoints de API

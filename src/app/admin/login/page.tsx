@@ -2,12 +2,14 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   const router = useRouter();
   
   // Verificar si ya hay una sesión activa
@@ -16,6 +18,7 @@ export default function AdminLogin() {
     const user = localStorage.getItem('adminUser');
     
     if (token && user) {
+      console.log('Sesión existente encontrada, redirigiendo...');
       router.push('/admin/dashboard');
     }
   }, [router]);
@@ -24,8 +27,12 @@ export default function AdminLogin() {
     e.preventDefault();
     setError('');
     setLoading(true);
+    setDebugInfo(null);
+
+    console.log('Intentando inicio de sesión con:', { email });
 
     try {
+      // Llamada a la API de autenticación
       const response = await fetch('/api/auth', {
         method: 'POST',
         headers: {
@@ -34,20 +41,47 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
 
+      console.log('Respuesta recibida, status:', response.status);
+      
       const data = await response.json();
-
+      console.log('Datos recibidos:', { 
+        success: !!data.token, 
+        hasUser: !!data.user,
+        hasError: !!data.error
+      });
+      
       if (!response.ok) {
+        // Recolectar información de depuración en caso de error
+        setDebugInfo({
+          status: response.status,
+          statusText: response.statusText,
+          error: data.error || 'Error desconocido',
+          data
+        });
+        
         throw new Error(data.error || 'Error en el inicio de sesión');
       }
 
-      // Guardar token en localStorage
+      // Verificar que la respuesta contiene los datos necesarios
+      if (!data.token || !data.user) {
+        setDebugInfo({
+          invalidResponse: true,
+          data
+        });
+        throw new Error('Respuesta de autenticación inválida');
+      }
+
+      // Guardar token y datos del usuario en localStorage
       localStorage.setItem('adminToken', data.token);
       localStorage.setItem('adminUser', JSON.stringify(data.user));
+
+      console.log('Inicio de sesión exitoso, redirigiendo al dashboard...');
 
       // Redireccionar al panel de administración
       router.push('/admin/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Error en el inicio de sesión');
+      console.error('Error durante el inicio de sesión:', err);
+      setError(err.message || 'Error en el inicio de sesión. Intente nuevamente.');
     } finally {
       setLoading(false);
     }
@@ -57,10 +91,31 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-primary">
       <div className="bg-white/10 backdrop-blur-lg p-8 rounded-xl shadow-xl w-full max-w-md">
         <div className="text-center mb-8">
-          <div 
-            className="h-16 w-48 mx-auto mb-6 bg-contain bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/logo.png')" }}
-          ></div>
+          <div className="h-16 w-48 mx-auto mb-6 relative">
+            {/* Logo */}
+            <Image 
+              src="/imagenes/conexion_logo.png" 
+              alt="Conexion 360 Logo" 
+              width={200} 
+              height={64} 
+              className="mx-auto"
+              onError={(e) => {
+                // Fallback si la imagen no se puede cargar
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; // Prevenir loop infinito
+                target.style.display = 'none';
+                
+                // Crear elemento de texto como fallback
+                const parent = target.parentElement;
+                if (parent) {
+                  const fallback = document.createElement('div');
+                  fallback.textContent = 'CONEXION 360';
+                  fallback.className = 'text-2xl font-bold text-white';
+                  parent.appendChild(fallback);
+                }
+              }}
+            />
+          </div>
           <h1 className="text-2xl font-bold text-white">Panel de Administración</h1>
           <p className="text-gray-300 mt-2">Ingresa tus credenciales para acceder</p>
         </div>
@@ -119,7 +174,22 @@ export default function AdminLogin() {
               'Iniciar Sesión'
             )}
           </button>
+          
+          {/* Sección de información de depuración - solo se muestra si hay un error */}
+          {debugInfo && (
+            <div className="mt-6 text-xs text-gray-400 border-t border-gray-700 pt-4">
+              <p className="font-semibold mb-1">Información de depuración:</p>
+              <pre className="bg-black/30 p-2 rounded overflow-auto max-h-32">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </div>
+          )}
         </form>
+        
+        {/* Nota para el desarrollador */}
+        <div className="mt-6 text-center text-xs text-gray-400">
+          <p>Si tienes problemas para iniciar sesión, contacta al administrador.</p>
+        </div>
       </div>
     </div>
   );

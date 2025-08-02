@@ -1,19 +1,32 @@
-
 // src/middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 
-// Este middleware verifica la autenticación para rutas de API protegidas
 export async function middleware(request: NextRequest) {
-  // Rutas que no requieren autenticación
+  const path = request.nextUrl.pathname;
+  
+  // Rutas que nunca deben requerir autenticación
+  if (path === '/api/auth') {
+    // Permitir acceso a la ruta de autenticación sin verificación
+    return NextResponse.next();
+  }
+  
+  // Otras rutas públicas
   const publicPaths = [
-    '/api/auth',
-    '/api/db-check'
+    '/api/db-check',
+    '/api/test-db',
+    '/api/hero',
+    '/api/galeria',
+    '/api/generos',
+    '/api/musica',
+    '/api/nosotros',
+    '/api/redes',
+    '/api/configuracion',
+    '/api/mensajes'
   ];
 
-  // Si la ruta es pública, permitir acceso
-  const path = request.nextUrl.pathname;
+  // Si la ruta es pública o no es una API, permitir acceso
   if (!path.startsWith('/api/') || publicPaths.some(publicPath => path.startsWith(publicPath))) {
     return NextResponse.next();
   }
@@ -27,11 +40,9 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  // Si la autenticación es exitosa, permitir acceso
   return NextResponse.next();
 }
 
-// Configurar el matcher para las rutas de API
 export const config = {
   matcher: '/api/:path*',
 };
