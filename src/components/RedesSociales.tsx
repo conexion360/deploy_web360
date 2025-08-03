@@ -74,7 +74,7 @@ const RedesSociales: React.FC = () => {
           </h2>
           <p className="text-gray-300 max-w-3xl mx-auto text-lg mt-4">
             Mantente conectado con nosotros y entérate de todos nuestros eventos. 
-            Síguenos en nuestras plataformas para no perderte nuestra música.
+            Síguenos en nuestras plataformas.
           </p>
         </div>
         
