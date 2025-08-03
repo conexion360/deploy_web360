@@ -5,14 +5,13 @@ import { db } from '@/lib/db';
 // GET - Obtener una imagen por ID
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Asegurar que params sea resuelto si es una promesa
-    const params = context.params instanceof Promise ? await context.params : context.params;
-    const id = parseInt(params.id);
+    const { id } = await params;
+    const numericId = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(numericId)) {
       return NextResponse.json(
         { error: 'ID inválido' },
         { status: 400 }
@@ -21,7 +20,7 @@ export async function GET(
     
     const result = await db.query(
       'SELECT * FROM galeria WHERE id = $1',
-      [id]
+      [numericId]
     );
     
     if (result.rows.length === 0) {
@@ -44,14 +43,13 @@ export async function GET(
 // PUT - Actualizar una imagen
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Asegurar que params sea resuelto si es una promesa
-    const params = context.params instanceof Promise ? await context.params : context.params;
-    const id = parseInt(params.id);
+    const { id } = await params;
+    const numericId = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(numericId)) {
       return NextResponse.json(
         { error: 'ID inválido' },
         { status: 400 }
@@ -66,7 +64,7 @@ export async function PUT(
            orden = $5, categoria = $6, destacado = $7, fecha_actualizacion = CURRENT_TIMESTAMP
        WHERE id = $8
        RETURNING *`,
-      [titulo, descripcion, imagen, thumbnail, orden, categoria, destacado, id]
+      [titulo, descripcion, imagen, thumbnail, orden, categoria, destacado, numericId]
     );
     
     if (result.rows.length === 0) {
@@ -89,14 +87,13 @@ export async function PUT(
 // DELETE - Eliminar una imagen
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Asegurar que params sea resuelto si es una promesa
-    const params = context.params instanceof Promise ? await context.params : context.params;
-    const id = parseInt(params.id);
+    const { id } = await params;
+    const numericId = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(numericId)) {
       return NextResponse.json(
         { error: 'ID inválido' },
         { status: 400 }
@@ -105,7 +102,7 @@ export async function DELETE(
     
     const result = await db.query(
       'DELETE FROM galeria WHERE id = $1 RETURNING id',
-      [id]
+      [numericId]
     );
     
     if (result.rows.length === 0) {

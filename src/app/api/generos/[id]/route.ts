@@ -5,14 +5,12 @@ import { db } from '@/lib/db';
 // GET - Obtener un género por ID
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Asegurar que params sea resuelto si es una promesa
-    const params = context.params instanceof Promise ? await context.params : context.params;
-    const id = parseInt(params.id);
-    
-    if (isNaN(id)) {
+    const { id } = await params;
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
       return NextResponse.json(
         { error: 'ID inválido' },
         { status: 400 }
@@ -21,7 +19,7 @@ export async function GET(
     
     const result = await db.query(
       'SELECT * FROM generos WHERE id = $1',
-      [id]
+      [numericId]
     );
     
     if (result.rows.length === 0) {
@@ -44,14 +42,12 @@ export async function GET(
 // PUT - Actualizar un género
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Asegurar que params sea resuelto si es una promesa
-    const params = context.params instanceof Promise ? await context.params : context.params;
-    const id = parseInt(params.id);
-    
-    if (isNaN(id)) {
+    const { id } = await params;
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
       return NextResponse.json(
         { error: 'ID inválido' },
         { status: 400 }
@@ -66,7 +62,7 @@ export async function PUT(
            orden = $5, activo = $6, fecha_actualizacion = CURRENT_TIMESTAMP
        WHERE id = $7
        RETURNING *`,
-      [nombre, descripcion, imagen, icono, orden, activo, id]
+      [nombre, descripcion, imagen, icono, orden, activo, numericId]
     );
     
     if (result.rows.length === 0) {
@@ -89,14 +85,12 @@ export async function PUT(
 // DELETE - Eliminar un género
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Asegurar que params sea resuelto si es una promesa
-    const params = context.params instanceof Promise ? await context.params : context.params;
-    const id = parseInt(params.id);
-    
-    if (isNaN(id)) {
+    const { id } = await params;
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
       return NextResponse.json(
         { error: 'ID inválido' },
         { status: 400 }
@@ -106,7 +100,7 @@ export async function DELETE(
     // Primero verificar si hay música que use este género
     const checkResult = await db.query(
       'SELECT COUNT(*) FROM musica WHERE genero_id = $1',
-      [id]
+      [numericId]
     );
     
     if (parseInt(checkResult.rows[0].count) > 0) {
@@ -118,7 +112,7 @@ export async function DELETE(
     
     const result = await db.query(
       'DELETE FROM generos WHERE id = $1 RETURNING id',
-      [id]
+      [numericId]
     );
     
     if (result.rows.length === 0) {

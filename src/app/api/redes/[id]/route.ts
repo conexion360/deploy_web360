@@ -5,14 +5,12 @@ import { db } from '@/lib/db';
 // GET - Obtener una red social por ID
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Asegurar que params sea resuelto si es una promesa
-    const params = context.params instanceof Promise ? await context.params : context.params;
-    const id = parseInt(params.id);
-    
-    if (isNaN(id)) {
+    const { id } = await params;
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
       return NextResponse.json(
         { error: 'ID inválido' },
         { status: 400 }
@@ -21,7 +19,7 @@ export async function GET(
     
     const result = await db.query(
       'SELECT * FROM redes_sociales WHERE id = $1',
-      [id]
+      [numericId]
     );
     
     if (result.rows.length === 0) {
@@ -44,14 +42,12 @@ export async function GET(
 // PUT - Actualizar una red social
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Asegurar que params sea resuelto si es una promesa
-    const params = context.params instanceof Promise ? await context.params : context.params;
-    const id = parseInt(params.id);
-    
-    if (isNaN(id)) {
+    const { id } = await params;
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
       return NextResponse.json(
         { error: 'ID inválido' },
         { status: 400 }
@@ -66,7 +62,7 @@ export async function PUT(
            color = $5, orden = $6, activo = $7, fecha_actualizacion = CURRENT_TIMESTAMP
        WHERE id = $8
        RETURNING *`,
-      [nombre, url, icono, username, color, orden, activo, id]
+      [nombre, url, icono, username, color, orden, activo, numericId]
     );
     
     if (result.rows.length === 0) {
@@ -89,14 +85,12 @@ export async function PUT(
 // DELETE - Eliminar una red social
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Asegurar que params sea resuelto si es una promesa
-    const params = context.params instanceof Promise ? await context.params : context.params;
-    const id = parseInt(params.id);
-    
-    if (isNaN(id)) {
+    const { id } = await params;
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
       return NextResponse.json(
         { error: 'ID inválido' },
         { status: 400 }
@@ -105,7 +99,7 @@ export async function DELETE(
     
     const result = await db.query(
       'DELETE FROM redes_sociales WHERE id = $1 RETURNING id',
-      [id]
+      [numericId]
     );
     
     if (result.rows.length === 0) {

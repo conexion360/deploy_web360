@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import NavBar from '@/components/NavBar';
 import FooterSection from '@/components/FooterSection';
+import DynamicHead from '@/components/DynamicHead';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,9 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <head>
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
-      </head>
+      <DynamicHead />
       <body className={inter.className}>
         {/* NavBar se incluye una sola vez en el layout raíz */}
         <NavBar />

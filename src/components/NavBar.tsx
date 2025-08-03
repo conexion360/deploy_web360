@@ -3,16 +3,53 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+
+interface SiteConfig {
+  nombre_sitio: string;
+  logo: string | null;
+  favicon: string | null;
+  email_contacto: string | null;
+  telefono: string | null;
+  direccion: string | null;
+  footer_texto: string | null;
+  facebook: string | null;
+  instagram: string | null;
+  tiktok: string | null;
+  youtube: string | null;
+}
 
 const NavBar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [config, setConfig] = useState<SiteConfig | null>(null);
+  const [loading, setLoading] = useState(true);
   const pathname = usePathname();
   
   // No mostrar el NavBar en rutas que comiencen con /admin
   if (pathname?.startsWith('/admin')) {
     return null;
   }
+
+  // Fetch site configuration
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch('/api/configuracion');
+        if (!response.ok) {
+          throw new Error('Error al cargar la configuración');
+        }
+        const data = await response.json();
+        setConfig(data);
+      } catch (error) {
+        console.error('Error fetching site configuration:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConfig();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,10 +81,22 @@ const NavBar: React.FC = () => {
     >
       <nav className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
-          {/* Text Logo */}
+          {/* Logo */}
           <div className="text-white font-bold text-xl md:text-2xl relative group">
-            <span className="text-white">CONEXION</span>
-            <span className="text-secondary"> 360</span>
+            {config?.logo ? (
+              <div className="h-12 relative flex items-center">
+                <img 
+                  src={config.logo} 
+                  alt={config.nombre_sitio || "CONEXION 360"} 
+                  className="h-full w-auto object-contain"
+                />
+              </div>
+            ) : (
+              <div>
+                <span className="text-white">CONEXION</span>
+                <span className="text-secondary"> 360</span>
+              </div>
+            )}
           </div>
           
           {/* Desktop Navigation */}
