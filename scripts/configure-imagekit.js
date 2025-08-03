@@ -1,88 +1,99 @@
 // scripts/configure-imagekit.js
-// Este script configura las transformaciones predeterminadas en ImageKit
+require('dotenv').config();
+const ImageKit = require('imagekit');
 
-const https = require('https');
+// Verificar la configuración de variables de entorno
+console.log('Verificando configuración de ImageKit...');
+console.log(`NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY: ${process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY ? '✓ Configurada' : '✗ Faltante'}`);
+console.log(`IMAGEKIT_PRIVATE_KEY: ${process.env.IMAGEKIT_PRIVATE_KEY ? '✓ Configurada' : '✗ Faltante'}`);
+console.log(`NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT: ${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ? '✓ Configurada' : '✗ Faltante'}`);
 
-const IMAGEKIT_ID = 'qpdyvnppk';
-const PRIVATE_KEY = 'private_OiWhfp78ou3Prah0GLZ67xoLE98=';
+// Configuración de ImageKit
+if (!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || !process.env.IMAGEKIT_PRIVATE_KEY || !process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT) {
+  console.error('ERROR: Faltan variables de entorno para ImageKit.');
+  console.error('Por favor, configura NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY y NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT en tu archivo .env');
+  process.exit(1);
+}
 
-// Configuración de transformaciones predeterminadas
-const defaultTransformations = {
-  // Para todas las imágenes subidas
-  default: {
-    pre: 'f-webp,q-85',
-    post: []
-  },
-  
-  // Transformaciones específicas por carpeta
-  folders: {
-    'hero-slides': {
-      pre: 'f-webp,q-90',
-      post: []
-    },
-    'gallery': {
-      pre: 'f-webp,q-85',
-      post: []
-    },
-    'genres': {
-      pre: 'f-webp,q-85,ar-3-2,c-at_max',
-      post: []
-    },
-    'music-covers': {
-      pre: 'f-webp,q-80,ar-1-1,c-at_max',
-      post: []
+const imagekit = new ImageKit({
+  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+});
+
+// Verificar la conexión con ImageKit
+const testConnection = async () => {
+  try {
+    console.log('Verificando conexión con ImageKit...');
+    
+    // Obtener información de la cuenta
+    const accountDetails = await imagekit.getAccountDetails();
+    console.log('✅ Conexión con ImageKit exitosa!');
+    console.log(`Detalles de la cuenta:`);
+    console.log(`   Nombre: ${accountDetails.name}`);
+    console.log(`   Email: ${accountDetails.email}`);
+    
+    // Listar las carpetas existentes
+    console.log('\nListando carpetas en ImageKit...');
+    const folders = await imagekit.listFiles({
+      type: 'folder',
+      limit: 10
+    });
+    
+    console.log('Carpetas encontradas:');
+    if (folders.length === 0) {
+      console.log('   No se encontraron carpetas');
+    } else {
+      folders.forEach(folder => {
+        console.log(`   - ${folder.name}`);
+      });
+    }
+    
+    // Crear carpetas necesarias si no existen
+    const requiredFolders = [
+      'hero-slides',
+      'gallery',
+      'about',
+      'genres',
+      'music-covers',
+      'music-files',
+      'site-assets'
+    ];
+    
+    console.log('\nVerificando carpetas necesarias...');
+    const existingFolderNames = folders.map(f => f.name);
+    
+    for (const folderName of requiredFolders) {
+      if (!existingFolderNames.includes(folderName)) {
+        console.log(`   Creando carpeta: ${folderName}`);
+        try {
+          await imagekit.createFolder(folderName);
+          console.log(`   ✅ Carpeta ${folderName} creada correctamente`);
+        } catch (err) {
+          console.error(`   ❌ Error al crear carpeta ${folderName}:`, err.message);
+        }
+      } else {
+        console.log(`   ✓ Carpeta ${folderName} ya existe`);
+      }
+    }
+    
+    console.log('\n✅ Configuración de ImageKit completada correctamente!');
+    
+  } catch (error) {
+    console.error('❌ Error al conectar con ImageKit:', error);
+    console.log('\nPosibles soluciones:');
+    console.log('1. Verifica que las claves de API de ImageKit sean correctas');
+    console.log('2. Asegúrate de que tu cuenta de ImageKit esté activa');
+    console.log('3. Comprueba tu conexión a internet');
+    
+    // Verificar si el error es de autenticación
+    if (error.message && error.message.includes('authentication')) {
+      console.log('\n⚠️ Error de autenticación detectado. Asegúrate de que tus claves de API sean correctas.');
     }
   }
 };
 
-console.log(`
-===========================================
-Configuración de ImageKit para WebP
-===========================================
-
-Este script configurará las siguientes optimizaciones:
-
-1. Conversión automática a WebP
-2. Compresión optimizada por tipo de contenido
-3. Redimensionamiento inteligente
-
-IMPORTANTE: 
-- Las imágenes existentes NO se modificarán
-- Solo afecta a nuevas subidas
-- Las transformaciones son dinámicas (no ocupan espacio extra)
-
-Presiona Ctrl+C para cancelar o Enter para continuar...
-`);
-
-// Nota: La API de ImageKit no permite configurar transformaciones predeterminadas programáticamente
-// Debes hacerlo desde el dashboard. Este script es una guía de las configuraciones recomendadas.
-
-console.log(`
-INSTRUCCIONES MANUALES:
-
-1. Ve a https://imagekit.io/dashboard/media-library/settings
-
-2. En "Upload Settings", configura:
-   - Default File Format: WebP
-   - Default Quality: 85
-   - Auto-rotate based on EXIF: ON
-   - Strip metadata: ON
-
-3. En "URL-endpoint settings", configura:
-   - Default transformations: f-webp,q-85
-
-4. Para cada carpeta, puedes configurar transformaciones específicas:
-   
-   - hero-slides: f-webp,q-90
-   - gallery: f-webp,q-85
-   - genres: f-webp,q-85,ar-3-2,c-at_max
-   - music-covers: f-webp,q-80,ar-1-1,c-at_max
-
-5. Guarda los cambios
-
-BENEFICIOS:
-✓ Reducción del 30-50% en el tamaño de archivos
-✓ Carga más rápida
-✓ Mejor experiencia de usuario
-✓ Ahorro de ancho de banda
-`);
+// Ejecutar la verificación
+testConnection().finally(() => {
+  console.log('Finalizado el proceso de verificación de ImageKit.');
+});

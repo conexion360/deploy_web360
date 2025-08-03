@@ -2,13 +2,17 @@
     "name": "web-conexion360-sac",
     "version": "0.1.0",
     "private": true,
-"scripts": {
-  "dev": "next dev",
-  "build": "NODE_OPTIONS='--max-old-space-size=4096' next build --no-lint",
-  "start": "next start",
-  "lint": "next lint",
-  "setup-db": "node setup-db.js"
-},
+    "scripts": {
+        "dev": "next dev",
+        "build": "NODE_OPTIONS='--max-old-space-size=4096' next build --no-lint",
+        "start": "node .next/standalone/server.js",
+        "start:next": "next start",
+        "lint": "next lint",
+        "setup-db": "node scripts/setup-db.js",
+        "create-admin": "node scripts/create-admin.js",
+        "db-check": "node scripts/db-healthcheck.js",
+        "configure-imagekit": "node scripts/configure-imagekit.js"
+    },
     "dependencies": {
         "@types/sharp": "^0.31.1",
         "bcrypt": "^5.1.1",

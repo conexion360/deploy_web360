@@ -1,101 +1,89 @@
-// db-healthcheck.js
+// scripts/db-healthcheck.js
 require('dotenv').config();
 const { Pool } = require('pg');
 
-// Función para verificar la conexión a la base de datos
-async function checkDatabaseConnection() {
-  if (!process.env.DATABASE_URL) {
-    console.error('❌ Error: La variable DATABASE_URL no está definida');
-    console.error('Por favor, configura esta variable en el archivo .env o en las variables de entorno');
-    return false;
-  }
+// Log database connection attempt
+console.log('Checking database connection...');
+console.log(`DATABASE_URL is ${process.env.DATABASE_URL ? 'set' : 'NOT SET'}`);
 
-  // Ocultar información sensible en los logs
-  const dbUrl = process.env.DATABASE_URL;
-  const maskedUrl = dbUrl.replace(/\/\/[^:]+:[^@]+@/, '//****:****@');
-  console.log('Intentando conectar a la base de datos con URL:', maskedUrl);
-
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    // Tiempo de espera de conexión reducido para diagnóstico rápido
-    connectionTimeoutMillis: 5000
-  });
-
-  let client;
-  try {
-    console.log('Obteniendo conexión del pool...');
-    client = await pool.connect();
-    
-    console.log('Ejecutando consulta de prueba...');
-    const result = await client.query('SELECT NOW() as time, current_database() as database, version() as version');
-    
-    console.log('\n✅ CONEXIÓN EXITOSA A LA BASE DE DATOS');
-    console.log('----------------------------------------');
-    console.log(`Tiempo del servidor: ${result.rows[0].time}`);
-    console.log(`Base de datos: ${result.rows[0].database}`);
-    console.log(`Versión de PostgreSQL: ${result.rows[0].version}`);
-    
-    // Verificar tablas existentes
-    console.log('\nVerificando tablas en la base de datos...');
-    const tablesResult = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      ORDER BY table_name
-    `);
-    
-    if (tablesResult.rows.length === 0) {
-      console.log('⚠️ No se encontraron tablas en la base de datos');
-      console.log('Debes ejecutar el script setup-db.js para crear las tablas necesarias');
-    } else {
-      console.log(`Encontradas ${tablesResult.rows.length} tablas:`);
-      tablesResult.rows.forEach((row, index) => {
-        console.log(`${index + 1}. ${row.table_name}`);
-      });
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('\n❌ ERROR AL CONECTAR CON LA BASE DE DATOS');
-    console.error('----------------------------------------');
-    console.error('Detalles del error:', error);
-    
-    // Diagnóstico adicional
-    console.error('\nPosibles causas y soluciones:');
-    if (error.code === 'ECONNREFUSED') {
-      console.error('- El servidor de base de datos no está disponible o la dirección/puerto es incorrecta');
-      console.error('- Verifica que la URL de conexión sea correcta');
-      console.error('- Asegúrate de que el servidor PostgreSQL esté en ejecución');
-    } else if (error.code === 'ETIMEDOUT') {
-      console.error('- Tiempo de espera agotado al intentar conectar');
-      console.error('- Verifica la conectividad de red');
-      console.error('- Comprueba que no haya reglas de firewall bloqueando la conexión');
-    } else if (error.code === '28P01') {
-      console.error('- Autenticación fallida: contraseña incorrecta');
-      console.error('- Verifica las credenciales en la URL de conexión');
-    } else if (error.code === '3D000') {
-      console.error('- La base de datos especificada no existe');
-      console.error('- Crea la base de datos o verifica el nombre en la URL de conexión');
-    }
-    
-    return false;
-  } finally {
-    if (client) {
-      console.log('Liberando conexión...');
-      client.release();
-    }
-    await pool.end();
-  }
+if (!process.env.DATABASE_URL) {
+  console.error('ERROR: DATABASE_URL environment variable is not set.');
+  console.error('Please set this variable in your Railway project or .env file.');
+  process.exit(1);
 }
 
-// Ejecutar la verificación
-checkDatabaseConnection().then(success => {
-  if (success) {
-    console.log('\n✨ La conexión a la base de datos funciona correctamente');
-    process.exit(0);
-  } else {
-    console.error('\n❌ No se pudo establecer la conexión a la base de datos');
+// Setup PostgreSQL connection
+console.log(`Connecting to: ${process.env.DATABASE_URL.split('@')[1].split('/')[0]}`);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false } // Necesario para conexiones remotas a Railway
+});
+
+// Check database connection
+const checkConnection = async () => {
+  const client = await pool.connect();
+  try {
+    // Try to query the database
+    const result = await client.query('SELECT NOW() as time');
+    console.log('✅ Database connection successful!');
+    console.log(`Server time: ${result.rows[0].time}`);
+    
+    // Check if the usuarios table exists and if the admin user exists
+    try {
+      const userResult = await client.query(
+        "SELECT * FROM usuarios WHERE email = 'admin@conexion360sac.com'"
+      );
+      
+      if (userResult.rows.length > 0) {
+        console.log('✅ Admin user exists in the database');
+        console.log(`   Username: ${userResult.rows[0].nombre}`);
+        console.log(`   Email: ${userResult.rows[0].email}`);
+        console.log(`   Role: ${userResult.rows[0].rol}`);
+        console.log(`   Last login: ${userResult.rows[0].ultimo_acceso || 'Never'}`);
+      } else {
+        console.log('⚠️ Admin user does not exist. Run setup-db.js to create it.');
+      }
+
+      // Verify tables count
+      const tablesResult = await client.query(`
+        SELECT count(*) as table_count 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public'
+      `);
+      
+      console.log(`✅ Database has ${tablesResult.rows[0].table_count} tables`);
+
+      // List all tables
+      const tableListResult = await client.query(`
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public'
+        ORDER BY table_name
+      `);
+      
+      console.log('Tables in database:');
+      tableListResult.rows.forEach(row => {
+        console.log(`   - ${row.table_name}`);
+      });
+
+    } catch (err) {
+      if (err.code === '42P01') { // undefined_table error code
+        console.log('⚠️ Tables do not exist. Run setup-db.js to create them.');
+      } else {
+        throw err;
+      }
+    }
+  } catch (err) {
+    console.error('❌ Database connection failed:', err);
     process.exit(1);
+  } finally {
+    client.release();
+    pool.end();
   }
+};
+
+// Run the check
+checkConnection().catch(err => {
+  console.error('Failed to check database connection:', err);
+  process.exit(1);
 });

@@ -1,242 +1,253 @@
-// setup-db.js
-const { Pool } = require('pg');
+// scripts/setup-db.js
 require('dotenv').config();
+const { Pool } = require('pg');
 
-// Verificar la variable de entorno DATABASE_URL
+// Log database connection attempt
+console.log('Setting up database connection...');
+console.log(`DATABASE_URL is ${process.env.DATABASE_URL ? 'set' : 'NOT SET'}`);
+
 if (!process.env.DATABASE_URL) {
-  console.error('❌ Error: La variable DATABASE_URL no está definida');
-  console.error('Por favor, configura esta variable en el archivo .env o en las variables de entorno');
+  console.error('ERROR: DATABASE_URL environment variable is not set.');
+  console.error('Please set this variable in your Railway project or .env file.');
   process.exit(1);
 }
 
-// Ocultar información sensible en los logs
-const dbUrl = process.env.DATABASE_URL;
-const maskedUrl = dbUrl.replace(/\/\/[^:]+:[^@]+@/, '//****:****@');
-console.log('Conectando a base de datos con URL:', maskedUrl);
-
+// Setup PostgreSQL connection
+console.log(`Connecting to: ${process.env.DATABASE_URL.split('@')[1].split('/')[0]}`);
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: { rejectUnauthorized: false } // Necesario para conexiones remotas a Railway
 });
 
-// Sentencias SQL para crear las tablas
-const createTablesQueries = [
-  // Tabla de usuarios para administración
-  `CREATE TABLE IF NOT EXISTS usuarios (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    rol VARCHAR(20) DEFAULT 'admin',
-    ultimo_acceso TIMESTAMP,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`,
-
-  // Tabla de configuración del sitio
-  `CREATE TABLE IF NOT EXISTS configuracion (
-    id SERIAL PRIMARY KEY,
-    nombre_sitio VARCHAR(100) NOT NULL,
-    logo TEXT,
-    favicon TEXT,
-    email_contacto VARCHAR(100),
-    telefono VARCHAR(20),
-    direccion TEXT,
-    footer_texto TEXT,
-    facebook TEXT,
-    instagram TEXT,
-    tiktok TEXT,
-    youtube TEXT,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`,
-
-  // Tabla de slides del hero
-  `CREATE TABLE IF NOT EXISTS hero_slides (
-    id SERIAL PRIMARY KEY,
-    titulo VARCHAR(200) NOT NULL,
-    descripcion TEXT,
-    imagen_desktop TEXT NOT NULL,
-    imagen_mobile TEXT NOT NULL,
-    orden INT DEFAULT 1,
-    activo BOOLEAN DEFAULT TRUE,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`,
-
-  // Tabla para la sección "Sobre Nosotros"
-  `CREATE TABLE IF NOT EXISTS sobre_nosotros (
-    id SERIAL PRIMARY KEY,
-    titulo VARCHAR(200) NOT NULL,
-    descripcion TEXT NOT NULL,
-    imagen TEXT,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`,
-
-  // Tabla de características para "Sobre Nosotros"
-  `CREATE TABLE IF NOT EXISTS caracteristicas (
-    id SERIAL PRIMARY KEY,
-    titulo VARCHAR(200) NOT NULL,
-    icono VARCHAR(50),
-    orden INT DEFAULT 1,
-    sobre_nosotros_id INT REFERENCES sobre_nosotros(id) ON DELETE CASCADE,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`,
-
-  // Tabla de estadísticas
-  `CREATE TABLE IF NOT EXISTS estadisticas (
-    id SERIAL PRIMARY KEY,
-    valor VARCHAR(50) NOT NULL,
-    descripcion VARCHAR(100) NOT NULL,
-    orden INT DEFAULT 1,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`,
-
-  // Tabla de galería de imágenes
-  `CREATE TABLE IF NOT EXISTS galeria (
-    id SERIAL PRIMARY KEY,
-    titulo VARCHAR(200) NOT NULL,
-    descripcion TEXT,
-    imagen TEXT NOT NULL,
-    thumbnail TEXT,
-    orden INT DEFAULT 1,
-    categoria VARCHAR(100),
-    destacado BOOLEAN DEFAULT FALSE,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`,
-
-  // Tabla de géneros musicales
-  `CREATE TABLE IF NOT EXISTS generos (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    descripcion TEXT,
-    imagen TEXT,
-    icono VARCHAR(50),
-    orden INT DEFAULT 1,
-    activo BOOLEAN DEFAULT TRUE,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`,
-
-  // Tabla de música
-  `CREATE TABLE IF NOT EXISTS musica (
-    id SERIAL PRIMARY KEY,
-    titulo VARCHAR(200) NOT NULL,
-    artista VARCHAR(200),
-    archivo TEXT NOT NULL,
-    imagen_cover TEXT,
-    genero_id INT REFERENCES generos(id) ON DELETE SET NULL,
-    destacado BOOLEAN DEFAULT FALSE,
-    reproducible_web BOOLEAN DEFAULT TRUE,
-    orden INT,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`,
-
-  // Tabla de redes sociales
-  `CREATE TABLE IF NOT EXISTS redes_sociales (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    url TEXT NOT NULL,
-    icono VARCHAR(50),
-    username VARCHAR(100),
-    color VARCHAR(20),
-    orden INT DEFAULT 1,
-    activo BOOLEAN DEFAULT TRUE,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`,
-
-  // Tabla de mensajes de contacto
-  `CREATE TABLE IF NOT EXISTS mensajes_contacto (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    telefono VARCHAR(20),
-    mensaje TEXT NOT NULL,
-    leido BOOLEAN DEFAULT FALSE,
-    respondido BOOLEAN DEFAULT FALSE,
-    fecha_lectura TIMESTAMP,
-    fecha_respuesta TIMESTAMP,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`
-];
-
-// Datos iniciales para insertar en la base de datos
-const insertInitialDataQueries = [
-  // Usuario administrador por defecto
-  `INSERT INTO usuarios (nombre, email, password, rol)
-   VALUES ('Administrador', 'admin@conexion360sac.com', '$2a$10$Ck6VzMRWF8bF7nUXFU9JzeQLVk1PEsKrFS7Azlb0xNz3S9FQUn.Ra', 'superadmin')
-   ON CONFLICT (email) DO NOTHING`,
-
-  // Configuración inicial del sitio
-  `INSERT INTO configuracion (nombre_sitio, logo, favicon, email_contacto)
-   VALUES ('Conexion 360 SAC', NULL, NULL, 'gerencia@conexion360sac.com')
-   ON CONFLICT DO NOTHING`,
-
-  // Slide de ejemplo para el hero
-  `INSERT INTO hero_slides (titulo, descripcion, imagen_desktop, imagen_mobile, orden, activo)
-   VALUES ('Bienvenido a Conexion 360', 'Líderes en producción de eventos musicales', 
-           'https://ik.imagekit.io/qpdyvnppk/hero-slides/ejemplo-desktop.jpg', 
-           'https://ik.imagekit.io/qpdyvnppk/hero-slides/ejemplo-mobile.jpg', 1, true)
-   ON CONFLICT DO NOTHING`,
-
-  // Información para "Sobre Nosotros"
-  `INSERT INTO sobre_nosotros (titulo, descripcion, imagen)
-   VALUES ('Nuestra Pasión por la Música', 
-           'Somos una empresa líder en la producción de eventos musicales en el Perú, con más de 10 años de experiencia creando experiencias memorables para los amantes de la música.', 
-           'https://ik.imagekit.io/qpdyvnppk/about/ejemplo-nosotros.jpg')
-   ON CONFLICT DO NOTHING`
-];
-
-// Función para ejecutar consultas SQL secuencialmente
-async function executeQueries(queries) {
+// Database schema - Tables creation
+const createTables = async () => {
   const client = await pool.connect();
   try {
+    console.log('Testing database connection...');
+    const testResult = await client.query('SELECT NOW() as time');
+    console.log(`✅ Database connection successful! Server time: ${testResult.rows[0].time}`);
+
     await client.query('BEGIN');
-    
-    for (const query of queries) {
-      await client.query(query);
+
+    console.log('Creating tables if they do not exist...');
+
+    // Create usuarios (users) table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS usuarios (
+        id SERIAL PRIMARY KEY,
+        nombre VARCHAR(100) NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
+        password VARCHAR(100) NOT NULL,
+        rol VARCHAR(50) NOT NULL DEFAULT 'admin',
+        activo BOOLEAN NOT NULL DEFAULT true,
+        ultimo_acceso TIMESTAMP,
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ usuarios table created');
+
+    // Create hero_slides table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS hero_slides (
+        id SERIAL PRIMARY KEY,
+        titulo VARCHAR(100) NOT NULL,
+        descripcion TEXT,
+        imagen_desktop VARCHAR(255) NOT NULL,
+        imagen_mobile VARCHAR(255) NOT NULL,
+        orden INT NOT NULL DEFAULT 1,
+        activo BOOLEAN NOT NULL DEFAULT true,
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ hero_slides table created');
+
+    // Create sobre_nosotros table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sobre_nosotros (
+        id SERIAL PRIMARY KEY,
+        titulo VARCHAR(100) NOT NULL,
+        descripcion TEXT NOT NULL,
+        imagen VARCHAR(255),
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ sobre_nosotros table created');
+
+    // Create caracteristicas table (features for sobre_nosotros)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS caracteristicas (
+        id SERIAL PRIMARY KEY,
+        titulo VARCHAR(100) NOT NULL,
+        icono VARCHAR(50),
+        orden INT NOT NULL DEFAULT 1,
+        sobre_nosotros_id INT NOT NULL,
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (sobre_nosotros_id) REFERENCES sobre_nosotros(id) ON DELETE CASCADE
+      )
+    `);
+    console.log('✓ caracteristicas table created');
+
+    // Create estadisticas table (statistics)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS estadisticas (
+        id SERIAL PRIMARY KEY,
+        valor VARCHAR(50) NOT NULL,
+        descripcion VARCHAR(100) NOT NULL,
+        orden INT NOT NULL DEFAULT 1,
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ estadisticas table created');
+
+    // Create galeria table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS galeria (
+        id SERIAL PRIMARY KEY,
+        titulo VARCHAR(100) NOT NULL,
+        descripcion TEXT,
+        imagen VARCHAR(255) NOT NULL,
+        thumbnail VARCHAR(255),
+        orden INT NOT NULL DEFAULT 1,
+        categoria VARCHAR(50),
+        destacado BOOLEAN NOT NULL DEFAULT false,
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ galeria table created');
+
+    // Create generos table (music genres)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS generos (
+        id SERIAL PRIMARY KEY,
+        nombre VARCHAR(100) NOT NULL,
+        descripcion TEXT,
+        imagen VARCHAR(255) NOT NULL,
+        icono VARCHAR(50),
+        orden INT NOT NULL DEFAULT 1,
+        activo BOOLEAN NOT NULL DEFAULT true,
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ generos table created');
+
+    // Create musica table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS musica (
+        id SERIAL PRIMARY KEY,
+        titulo VARCHAR(100) NOT NULL,
+        artista VARCHAR(100),
+        archivo VARCHAR(255) NOT NULL,
+        imagen_cover VARCHAR(255),
+        genero_id INT,
+        destacado BOOLEAN NOT NULL DEFAULT false,
+        reproducible_web BOOLEAN NOT NULL DEFAULT true,
+        orden INT,
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (genero_id) REFERENCES generos(id) ON DELETE SET NULL
+      )
+    `);
+    console.log('✓ musica table created');
+
+    // Create redes_sociales table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS redes_sociales (
+        id SERIAL PRIMARY KEY,
+        nombre VARCHAR(50) NOT NULL,
+        url VARCHAR(255) NOT NULL,
+        icono VARCHAR(50),
+        username VARCHAR(100),
+        color VARCHAR(50),
+        orden INT NOT NULL DEFAULT 1,
+        activo BOOLEAN NOT NULL DEFAULT true,
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ redes_sociales table created');
+
+    // Create mensajes_contacto table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS mensajes_contacto (
+        id SERIAL PRIMARY KEY,
+        nombre VARCHAR(100) NOT NULL,
+        email VARCHAR(100) NOT NULL,
+        telefono VARCHAR(50),
+        mensaje TEXT NOT NULL,
+        leido BOOLEAN NOT NULL DEFAULT false,
+        respondido BOOLEAN NOT NULL DEFAULT false,
+        fecha_lectura TIMESTAMP,
+        fecha_respuesta TIMESTAMP,
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ mensajes_contacto table created');
+
+    // Create configuracion table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS configuracion (
+        id SERIAL PRIMARY KEY,
+        nombre_sitio VARCHAR(100) NOT NULL,
+        logo VARCHAR(255),
+        favicon VARCHAR(255),
+        email_contacto VARCHAR(100),
+        telefono VARCHAR(50),
+        direccion TEXT,
+        footer_texto TEXT,
+        facebook VARCHAR(255),
+        instagram VARCHAR(255),
+        tiktok VARCHAR(255),
+        youtube VARCHAR(255),
+        fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ configuracion table created');
+
+    // Check if default admin user exists
+    const userResult = await client.query(
+      'SELECT * FROM usuarios WHERE email = $1',
+      ['admin@conexion360sac.com']
+    );
+
+    // Create default admin user if not exists
+    if (userResult.rows.length === 0) {
+      const bcrypt = require('bcrypt');
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      
+      await client.query(
+        `INSERT INTO usuarios (nombre, email, password, rol) 
+         VALUES ('Administrador', 'admin@conexion360sac.com', $1, 'superadmin')`,
+        [hashedPassword]
+      );
+      console.log('✓ Default admin user created:');
+      console.log('   Email: admin@conexion360sac.com');
+      console.log('   Password: admin123');
+    } else {
+      console.log('✓ Default admin user already exists');
     }
-    
+
     await client.query('COMMIT');
-    console.log('✅ Operación completada con éxito');
-  } catch (error) {
+    console.log('Database setup completed successfully!');
+  } catch (err) {
     await client.query('ROLLBACK');
-    console.error('❌ Error durante la ejecución de las consultas:', error);
-    throw error;
+    console.error('Error setting up database:', err);
+    throw err;
   } finally {
     client.release();
+    pool.end();
   }
-}
+};
 
-// Función principal para inicializar la base de datos
-async function setupDatabase() {
-  console.log('🚀 Iniciando configuración de la base de datos...');
-  
-  try {
-    // Crear tablas
-    console.log('📊 Creando tablas...');
-    await executeQueries(createTablesQueries);
-    console.log('✅ Tablas creadas o verificadas correctamente');
-    
-    // Insertar datos iniciales
-    console.log('📝 Insertando datos iniciales...');
-    await executeQueries(insertInitialDataQueries);
-    console.log('✅ Datos iniciales insertados correctamente');
-    
-    console.log('🎉 ¡Base de datos configurada con éxito!');
-  } catch (error) {
-    console.error('❌ Error al configurar la base de datos:', error);
-  } finally {
-    await pool.end();
-  }
-}
-
-// Ejecutar la configuración
-setupDatabase();
+// Run the database setup
+createTables().catch(err => {
+  console.error('Failed to set up database:', err);
+  process.exit(1);
+});
