@@ -1,9 +1,8 @@
-// src/components/NavBar.tsx
+// src/components/NavBar.tsx - FIXED VERSION
 "use client"
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Image from 'next/image';
 
 interface SiteConfig {
   nombre_sitio: string;
@@ -26,12 +25,7 @@ const NavBar: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
   
-  // No mostrar el NavBar en rutas que comiencen con /admin
-  if (pathname?.startsWith('/admin')) {
-    return null;
-  }
-
-  // Fetch site configuration
+  // Move hooks to the top, BEFORE any conditional returns
   useEffect(() => {
     const fetchConfig = async () => {
       try {
@@ -59,6 +53,11 @@ const NavBar: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+  
+  // No mostrar el NavBar en rutas que comiencen con /admin
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);

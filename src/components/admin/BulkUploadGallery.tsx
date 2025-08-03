@@ -90,7 +90,8 @@ const BulkUploadGallery: React.FC = () => {
 
     try {
       // Crear una copia del estado de carga para actualizarlo
-      let currentStatus = [...uploadStatus];
+      // Cambiado de 'let' a 'const' para evitar advertencia de ESLint
+      const currentStatus = [...uploadStatus];
       
       // Subir cada archivo uno por uno
       for (let i = 0; i < files.length; i++) {

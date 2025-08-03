@@ -1,18 +1,27 @@
 // src/lib/imagekit.ts
 import ImageKit from 'imagekit';
 
-// Verificar que las variables de entorno estén definidas
-if (!process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || 
-    !process.env.IMAGEKIT_PRIVATE_KEY || 
-    !process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT) {
-  console.error('Las variables de entorno de ImageKit no están configuradas correctamente');
-}
+// Default values for development (will be overridden by environment variables if set)
+const DEFAULT_PUBLIC_KEY = 'public_nJIM9VeYDWasBIUi3ixlGpRzZz4=';
+const DEFAULT_PRIVATE_KEY = 'private_OiWhfp78ou3Prah0GLZ67xoLE98=';
+const DEFAULT_URL_ENDPOINT = 'https://ik.imagekit.io/qpdyvnppk';
+
+// Use environment variables with fallbacks
+const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || DEFAULT_PUBLIC_KEY;
+const privateKey = process.env.IMAGEKIT_PRIVATE_KEY || DEFAULT_PRIVATE_KEY;
+const urlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT || DEFAULT_URL_ENDPOINT;
+
+// Log configuration status without exposing private key
+console.log(`ImageKit configuration: 
+  publicKey: ${publicKey ? '✓ Set' : '✗ Missing'} 
+  privateKey: ${privateKey ? '✓ Set' : '✗ Missing'} 
+  urlEndpoint: ${urlEndpoint}`);
 
 // Configuración del servidor de ImageKit
 export const imagekit = new ImageKit({
-  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || 'public_nJIM9VeYDWasBIUi3ixlGpRzZz4=',
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || 'private_OiWhfp78ou3Prah0GLZ67xoLE98=',
-  urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/qpdyvnppk'
+  publicKey,
+  privateKey,
+  urlEndpoint
 });
 
 // Función helper para generar un nombre único de archivo
@@ -42,7 +51,7 @@ export function getFolderByType(type: string): string {
 }
 
 // Función para generar transformaciones de ImageKit
-export function getImageTransformation(type: string, options?: any) {
+export function getImageTransformation(type: string): any[] {
   const transformations: { [key: string]: any } = {
     'hero-desktop': [
       {
