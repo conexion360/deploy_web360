@@ -95,7 +95,7 @@ export default function GaleriaAdmin() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+const handleDelete = async (id: number) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar esta imagen? Esta acción no se puede deshacer.')) {
       try {
         const response = await fetch(`/api/galeria/${id}`, {

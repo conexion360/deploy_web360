@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
             
             const newUser = insertResult.rows[0];
             
-            // Generar token JWT
+            // Generar token JWT con mayor duración
             const jwtSecret = process.env.JWT_SECRET || 'secret_key';
             const token = jwt.sign(
               {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
                 rol: newUser.rol
               },
               jwtSecret,
-              { expiresIn: '8h' }
+              { expiresIn: '24h' } // Aumentado a 24 horas
             );
             
             return NextResponse.json({
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       // Continuamos a pesar del error
     }
 
-    // Generar token JWT usando la clave de .env
+    // Generar token JWT usando la clave de .env con mayor duración
     const jwtSecret = process.env.JWT_SECRET || 'secret_key';
     if (!jwtSecret) {
       console.error('JWT_SECRET no está definido en las variables de entorno');
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
         rol: user.rol
       },
       jwtSecret,
-      { expiresIn: '8h' }
+      { expiresIn: '24h' } // Aumentado a 24 horas
     );
 
     console.log(`Inicio de sesión exitoso para: ${email}`);
@@ -159,6 +159,77 @@ export async function POST(request: NextRequest) {
     console.error('Error en login:', error);
     return NextResponse.json(
       { error: 'Error en el servidor: ' + (error.message || 'Desconocido') },
+      { status: 500 }
+    );
+  }
+}
+
+// GET - Endpoint para renovar token
+export async function GET(request: NextRequest) {
+  try {
+    // Obtener token de autorización
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Token no proporcionado' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split(' ')[1];
+    const secret = process.env.JWT_SECRET || 'secret_key';
+    
+    try {
+      // Verificar el token actual (puede estar expirado)
+      const decoded = jwt.verify(token, secret, { ignoreExpiration: true }) as any;
+      
+      // Verificar que el usuario aún existe
+      const userResult = await db.query(
+        'SELECT id, nombre, email, rol FROM usuarios WHERE id = $1',
+        [decoded.id]
+      );
+      
+      if (userResult.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'Usuario no encontrado' },
+          { status: 404 }
+        );
+      }
+      
+      const user = userResult.rows[0];
+      
+      // Generar nuevo token
+      const newToken = jwt.sign(
+        {
+          id: user.id,
+          nombre: user.nombre,
+          email: user.email,
+          rol: user.rol
+        },
+        secret,
+        { expiresIn: '24h' }
+      );
+      
+      return NextResponse.json({
+        token: newToken,
+        user: {
+          id: user.id,
+          nombre: user.nombre,
+          email: user.email,
+          rol: user.rol
+        }
+      });
+      
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Token inválido' },
+        { status: 401 }
+      );
+    }
+  } catch (error: any) {
+    console.error('Error renovando token:', error);
+    return NextResponse.json(
+      { error: 'Error al renovar token' },
       { status: 500 }
     );
   }

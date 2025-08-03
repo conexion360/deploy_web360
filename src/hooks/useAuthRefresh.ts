@@ -1,4 +1,5 @@
 // src/hooks/useAuthRefresh.ts
+'use client'
 import { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
