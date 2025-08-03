@@ -87,14 +87,13 @@ const NavBar: React.FC = () => {
               <div className="h-12 relative flex items-center">
                 <img 
                   src={config.logo} 
-                  alt={config.nombre_sitio || "CONEXION 360"} 
+                  alt={config.nombre_sitio || ""} 
                   className="h-full w-auto object-contain"
                 />
               </div>
             ) : (
-              <div>
-                <span className="text-white">CONEXION</span>
-                <span className="text-secondary"> 360</span>
+              <div className="h-12 flex items-center">
+                {/* Contenedor vacío con la misma altura para mantener el espacio - sin texto */}
               </div>
             )}
           </div>
