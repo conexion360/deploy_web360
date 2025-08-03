@@ -12,6 +12,8 @@
     "dependencies": {
         "@types/sharp": "^0.31.1",
         "bcrypt": "^5.1.1",
+        "imagekit": "^5.2.0",
+        "imagekitio-react": "^4.3.0",
         "jsonwebtoken": "^9.0.2",
         "next": "15.4.3",
         "pg": "^8.16.3",
