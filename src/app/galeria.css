@@ -12,16 +12,6 @@
   transform: translateY(0);
 }
 
-/* ===== ESTILOS DEL CARRUSEL 3D ===== */
-.carousel-3d-container {
-  position: relative;
-  height: 550px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 50px;
-  overflow: hidden;
-}
-
 .carousel-3d-wrapper {
   position: relative;
   width: 100%;
@@ -470,4 +460,14 @@
   border-radius: 50%;
   opacity: 0.2;
   pointer-events: none;
+}
+/* ===== ESTILOS DEL CARRUSEL 3D ===== */
+.carousel-3d-container {
+  position: relative;
+  height: 600px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 60px;
+  overflow: hidden;
+  perspective: 1400px;
 }

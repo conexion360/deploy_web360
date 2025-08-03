@@ -1,5 +1,6 @@
+// src/components/GallerySection.tsx
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface GalleryImage {
   id: number;
@@ -10,15 +11,29 @@ interface GalleryImage {
   categoria: string | null;
   destacado: boolean;
   orden: number;
+  loaded?: boolean;
+  error?: boolean;
 }
 
 const GallerySection: React.FC = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [activeSlide, setActiveSlide] = useState<GalleryImage | null>(null);
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const autoplayIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Función para mezclar array (Fisher-Yates)
+  const shuffleArray = (array: GalleryImage[]): GalleryImage[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
   
   // Cargar imágenes de la galería desde la API
   useEffect(() => {
@@ -33,22 +48,21 @@ const GallerySection: React.FC = () => {
         
         const data = await response.json();
         
-        // Ordenar por el campo orden
-        const sortedImages = [...data].sort((a, b) => a.orden - b.orden);
+        // Mezclar las imágenes para orden aleatorio
+        const shuffledImages = shuffleArray(data.map((img: GalleryImage) => ({
+          ...img,
+          loaded: false,
+          error: false
+        })));
         
-        setGalleryImages(sortedImages);
+        setGalleryImages(shuffledImages);
         setError(null);
+        
+        console.log(`Cargadas ${shuffledImages.length} imágenes de la galería en orden aleatorio`);
       } catch (err) {
         console.error('Error fetching gallery images:', err);
         setError('No se pudieron cargar las imágenes de la galería');
-        // Usar datos de ejemplo como fallback si hay un error
-        setGalleryImages([
-          { id: 1, titulo: 'Evento 1', descripcion: 'Descripción del evento 1', imagen: '', thumbnail: null, categoria: null, destacado: false, orden: 1 },
-          { id: 2, titulo: 'Evento 2', descripcion: 'Descripción del evento 2', imagen: '', thumbnail: null, categoria: null, destacado: false, orden: 2 },
-          { id: 3, titulo: 'Evento 3', descripcion: 'Descripción del evento 3', imagen: '', thumbnail: null, categoria: null, destacado: false, orden: 3 },
-          { id: 4, titulo: 'Evento 4', descripcion: 'Descripción del evento 4', imagen: '', thumbnail: null, categoria: null, destacado: false, orden: 4 },
-          { id: 5, titulo: 'Evento 5', descripcion: 'Descripción del evento 5', imagen: '', thumbnail: null, categoria: null, destacado: false, orden: 5 },
-        ]);
+        setGalleryImages([]);
       } finally {
         setLoading(false);
       }
@@ -57,54 +71,180 @@ const GallerySection: React.FC = () => {
     fetchGallery();
   }, []);
 
+  // Calcular índices visibles para el carrusel circular
+  const getVisibleSlideIndices = () => {
+    const total = galleryImages.length;
+    const indices = [];
+    
+    for (let i = -2; i <= 2; i++) {
+      const index = (currentIndex + i + total) % total;
+      indices.push(index);
+    }
+    
+    return indices;
+  };
+
+  // Calcular estilos para el efecto 3D
+  const getImageStyle = (index: number): React.CSSProperties => {
+    let indexDiff = index - currentIndex;
+    
+    // Ajuste para el carrusel circular
+    if (indexDiff > galleryImages.length / 2) {
+      indexDiff -= galleryImages.length;
+    } else if (indexDiff < -galleryImages.length / 2) {
+      indexDiff += galleryImages.length;
+    }
+    
+    const absoluteDiff = Math.abs(indexDiff);
+    
+    let translateZ = 0;
+    let translateX = 0;
+    let rotateY = 0;
+    let opacity = 1;
+    let zIndex = 5;
+    let scale = 1;
+    const radius = 800;
+    
+    if (indexDiff === 0) {
+      // Imagen central
+      translateZ = 0;
+      translateX = 0;
+      rotateY = 0;
+      opacity = 1;
+      zIndex = 10;
+      scale = 1;
+    } else if (absoluteDiff <= 2) {
+      // Efecto circular
+      const angle = indexDiff * 0.3;
+      translateZ = -radius * (1 - Math.cos(angle)) / 2;
+      translateX = radius * Math.sin(angle);
+      rotateY = -indexDiff * 35;
+      opacity = 1 - (absoluteDiff * 0.15);
+      zIndex = 5 - absoluteDiff;
+      scale = 0.9 - (absoluteDiff * 0.15);
+    } else {
+      // Imágenes muy alejadas
+      translateZ = -400;
+      translateX = indexDiff * 500;
+      rotateY = -indexDiff * 45;
+      opacity = 0;
+      zIndex = 0;
+      scale = 0.7;
+    }
+    
+    return {
+      transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+      opacity: opacity,
+      zIndex: zIndex,
+      transition: 'all 0.7s cubic-bezier(0.215, 0.610, 0.355, 1.000)'
+    };
+  };
+
+  const isVisible = (index: number) => {
+    return getVisibleSlideIndices().includes(index);
+  };
+
   const nextSlide = () => {
-    setActiveIndex((prevIndex) => (prevIndex + 1) % galleryImages.length);
+    if (isTransitioning || galleryImages.length === 0) return;
+    setIsTransitioning(true);
+    
+    setCurrentIndex((prev) => (prev + 1) % galleryImages.length);
+    
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 700);
   };
 
   const prevSlide = () => {
-    setActiveIndex((prevIndex) => (prevIndex - 1 + galleryImages.length) % galleryImages.length);
+    if (isTransitioning || galleryImages.length === 0) return;
+    setIsTransitioning(true);
+    
+    setCurrentIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+    
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 700);
   };
 
-  const openModal = (slide: GalleryImage) => {
+  const goToSlide = (index: number) => {
+    if (isTransitioning || index === currentIndex) return;
+    setIsTransitioning(true);
+    
+    setCurrentIndex(index);
+    
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 700);
+  };
+
+  const openSlide = (slide: GalleryImage, index: number) => {
     setActiveSlide(slide);
-    setModalOpen(true);
+    setActiveSlideIndex(index);
     document.body.style.overflow = 'hidden';
+    stopAutoplay();
   };
 
-  const closeModal = () => {
-    setModalOpen(false);
+  const closeSlide = () => {
+    setActiveSlide(null);
     document.body.style.overflow = '';
+    startAutoplay();
   };
 
   const nextModalSlide = () => {
-    if (activeSlide) {
-      const currentIndex = galleryImages.findIndex(img => img.id === activeSlide.id);
-      const nextIndex = (currentIndex + 1) % galleryImages.length;
-      setActiveSlide(galleryImages[nextIndex]);
-    }
+    const nextIndex = (activeSlideIndex + 1) % galleryImages.length;
+    setActiveSlide(galleryImages[nextIndex]);
+    setActiveSlideIndex(nextIndex);
   };
 
   const prevModalSlide = () => {
-    if (activeSlide) {
-      const currentIndex = galleryImages.findIndex(img => img.id === activeSlide.id);
-      const prevIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
-      setActiveSlide(galleryImages[prevIndex]);
+    const prevIndex = (activeSlideIndex - 1 + galleryImages.length) % galleryImages.length;
+    setActiveSlide(galleryImages[prevIndex]);
+    setActiveSlideIndex(prevIndex);
+  };
+
+  const startAutoplay = () => {
+    stopAutoplay();
+    if (galleryImages.length > 0) {
+      autoplayIntervalRef.current = setInterval(() => {
+        nextSlide();
+      }, 5000);
     }
   };
 
-  // Cuando el componente se monta, se inicia el autoplay
-  useEffect(() => {
-    const interval = setInterval(nextSlide, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  const stopAutoplay = () => {
+    if (autoplayIntervalRef.current) {
+      clearInterval(autoplayIntervalRef.current);
+      autoplayIntervalRef.current = null;
+    }
+  };
 
-  // Efecto para manejar teclas de escape y flechas
+  const handleImageLoad = (index: number) => {
+    setGalleryImages(prev => {
+      const updated = [...prev];
+      if (updated[index]) {
+        updated[index] = { ...updated[index], loaded: true, error: false };
+      }
+      return updated;
+    });
+  };
+
+  const handleImageError = (index: number) => {
+    setGalleryImages(prev => {
+      const updated = [...prev];
+      if (updated[index]) {
+        updated[index] = { ...updated[index], error: true };
+      }
+      return updated;
+    });
+  };
+
+  // Efectos y listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && modalOpen) {
-        closeModal();
+      if (e.key === 'Escape' && activeSlide) {
+        closeSlide();
       }
-      if (modalOpen) {
+      if (activeSlide) {
         if (e.key === 'ArrowLeft') {
           prevModalSlide();
         }
@@ -125,9 +265,17 @@ const GallerySection: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [modalOpen, activeSlide]);
+  }, [activeSlide, currentIndex]);
 
-  // Función para crear partículas decorativas
+  // Autoplay
+  useEffect(() => {
+    if (!loading && galleryImages.length > 0) {
+      startAutoplay();
+    }
+    return () => stopAutoplay();
+  }, [loading, galleryImages.length]);
+
+  // Crear partículas flotantes
   useEffect(() => {
     const createParticles = () => {
       const gallerySection = document.getElementById('galeria');
@@ -139,60 +287,70 @@ const GallerySection: React.FC = () => {
         const particle = document.createElement('div');
         particle.className = 'gallery-particle';
         
-        // Tamaño aleatorio
         const size = Math.random() * 10 + 5;
         particle.style.width = `${size}px`;
         particle.style.height = `${size}px`;
         
-        // Posición inicial aleatoria
         const posX = Math.random() * 100;
         const posY = Math.random() * 100;
         particle.style.left = `${posX}%`;
         particle.style.top = `${posY}%`;
         
-        // Duración y retardo aleatorio
         const duration = Math.random() * 30 + 20;
         const delay = Math.random() * 10;
         
-        // Aplicar animación
         particle.style.animation = `float ${duration}s linear ${delay}s infinite`;
         
-        // Agregar partícula al DOM
         gallerySection.appendChild(particle);
       }
     };
 
     createParticles();
     
-    // Cleanup function to remove particles
     return () => {
       const particles = document.querySelectorAll('.gallery-particle');
-      particles.forEach(particle => {
-        particle.remove();
-      });
+      particles.forEach(particle => particle.remove());
     };
   }, []);
 
-  // Si no hay imágenes o están cargando, mostrar un mensaje
-  if (galleryImages.length === 0 && loading) {
+  // Implementar reveal on scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    document.querySelectorAll('.reveal-on-scroll').forEach((el) => {
+      observer.observe(el);
+    });
+    
+    return () => observer.disconnect();
+  }, [loading]);
+
+  if (loading) {
     return (
       <section id="galeria" className="gallery-section">
-        <div className="gallery-background"></div>
-        <div className="gallery-gradient"></div>
+        <div className="gallery-background">
+          <div className="gallery-gradient"></div>
+          <div className="gallery-pattern" style={{
+            backgroundImage: `url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iMC44IiBmaWxsPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMDMpIiAvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIgLz48L3N2Zz4=')`
+          }}></div>
+        </div>
         
-        <div className="container mx-auto px-4 py-20 relative z-10">
-          <div className="text-center mb-12 reveal-on-scroll">
-            <h2 className="gallery-title">
-              <span className="gallery-title-primary">Nuestra</span>
-              <span className="gallery-title-secondary">Galería</span>
+        <div className="relative container mx-auto max-w-7xl px-4">
+          <div className="text-center mb-16">
+            <h2 className="gallery-title reveal-on-scroll">
+              <span className="gallery-title-primary">Galería de</span>
+              <span className="gallery-title-secondary">Imágenes</span>
             </h2>
-            <p className="text-gray-300 max-w-2xl mx-auto">
-              Cargando galería...
-            </p>
           </div>
           
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-secondary"></div>
+          <div className="text-center text-white py-16">
+            <div className="loading-spinner mx-auto"></div>
+            <p className="mt-6 text-xl">Cargando galería...</p>
           </div>
         </div>
       </section>
@@ -201,143 +359,148 @@ const GallerySection: React.FC = () => {
 
   return (
     <section id="galeria" className="gallery-section">
-      <div className="gallery-background"></div>
-      <div className="gallery-gradient"></div>
+      <div className="gallery-background">
+        <div className="gallery-gradient"></div>
+        <div className="gallery-pattern" style={{
+          backgroundImage: `url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iMC44IiBmaWxsPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMDMpIiAvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIgLz48L3N2Zz4=')`
+        }}></div>
+      </div>
       
-      <div className="container mx-auto px-4 py-20 relative z-10">
-        <div className="text-center mb-12 reveal-on-scroll">
-          <h2 className="gallery-title">
-            <span className="gallery-title-primary">Nuestra</span>
-            <span className="gallery-title-secondary">Galería</span>
+      <div className="relative container mx-auto max-w-7xl px-4">
+        <div className="text-center mb-16">
+          <h2 className="gallery-title reveal-on-scroll">
+            <span className="gallery-title-primary">Galería de</span>
+            <span className="gallery-title-secondary">Imágenes</span>
           </h2>
-          <p className="text-gray-300 max-w-2xl mx-auto">
-            Explora nuestra colección de momentos memorables y eventos destacados
-          </p>
         </div>
         
-        <div className="carousel-3d-container reveal-on-scroll">
-          <div className="carousel-3d-wrapper">
-            <div className="carousel-3d-stage">
-              {galleryImages.map((image, index) => {
-                // Cálculo para posicionar las diapositivas en un carrusel 3D
-                const position = index - activeIndex;
-                const zIndex = galleryImages.length - Math.abs(position);
-                const opacity = Math.abs(position) > 2 ? 0 : 1 - Math.abs(position) * 0.3;
-                const translateZ = -Math.abs(position) * 150;
-                const rotateY = position * 45;
-                
-                return (
-                  <div 
-                    key={image.id}
-                    className={`carousel-3d-slide ${index === activeIndex ? 'active' : ''}`}
-                    style={{
-                      transform: `translateZ(${translateZ}px) rotateY(${rotateY}deg)`,
-                      opacity,
-                      zIndex
-                    }}
-                    onClick={() => index === activeIndex ? openModal(image) : setActiveIndex(index)}
-                  >
-                    <div className="carousel-3d-slide-inner">
-                      {image.imagen ? (
-                        <img 
-                          src={image.imagen} 
-                          alt={image.titulo} 
-                          className="carousel-3d-image"
-                          onError={(e) => {
-                            // Fallback si la imagen no carga
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = '';
-                            target.style.display = 'none';
-                            
-                            // Mostrar un placeholder
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.style.backgroundColor = '#1e3a8a';
-                              const text = document.createElement('div');
-                              text.className = 'flex items-center justify-center h-full text-white';
-                              text.textContent = image.titulo;
-                              parent.appendChild(text);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="bg-gray-800 h-full w-full flex items-center justify-center text-white">
-                          {image.titulo}
-                        </div>
-                      )}
-                      <div className="carousel-3d-overlay">
-                        <div className="p-6 absolute bottom-0 w-full">
-                          <h3 className="text-xl font-bold text-white">{image.titulo}</h3>
-                          <p className="text-gray-200">{image.descripcion}</p>
-                        </div>
-                      </div>
-                      <div className="light-effect"></div>
-                    </div>
-                    <div className="carousel-3d-reflection"></div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            <button className="carousel-nav-btn carousel-prev-btn" onClick={prevSlide} aria-label="Imagen anterior">
-              &lt;
-            </button>
-            <button className="carousel-nav-btn carousel-next-btn" onClick={nextSlide} aria-label="Imagen siguiente">
-              &gt;
-            </button>
+        {galleryImages.length === 0 ? (
+          <div className="text-center text-white py-16">
+            <svg className="w-20 h-20 mx-auto mb-6 text-secondary opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <p className="text-xl mb-3">No se encontraron imágenes en la galería</p>
           </div>
-        </div>
+        ) : (
+          <div 
+            className="carousel-3d-container reveal-on-scroll"
+            onMouseEnter={stopAutoplay}
+            onMouseLeave={startAutoplay}
+          >
+            <div className="carousel-3d-wrapper">
+              <button 
+                className="carousel-nav-btn carousel-prev-btn"
+                onClick={prevSlide}
+                aria-label="Imagen anterior"
+              >
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+              </button>
+              
+              <button 
+                className="carousel-nav-btn carousel-next-btn"
+                onClick={nextSlide}
+                aria-label="Imagen siguiente"
+              >
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </button>
+              
+              <div className="carousel-3d-stage">
+                {galleryImages.map((slide, index) => (
+                  <div
+                    key={slide.id}
+                    className={`carousel-3d-slide ${index === currentIndex ? 'active' : ''}`}
+                    style={getImageStyle(index)}
+                    onClick={() => index === currentIndex ? openSlide(slide, index) : goToSlide(index)}
+                  >
+                    {isVisible(index) && (
+                      <div className="carousel-3d-slide-inner">
+                        <img 
+                          src={slide.imagen} 
+                          alt={slide.titulo} 
+                          className="carousel-3d-image"
+                          onLoad={() => handleImageLoad(index)}
+                          onError={() => handleImageError(index)}
+                        />
+                        
+                        {slide.error && (
+                          <div className="image-error-container">
+                            <svg className="image-error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            <span>Imagen no disponible</span>
+                          </div>
+                        )}
+                        
+                        <div className="carousel-3d-overlay"></div>
+                        <div className="light-effect"></div>
+                        <div className="carousel-3d-reflection"></div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Modal para vista ampliada */}
-      {modalOpen && activeSlide && (
-        <div className="gallery-modal" onClick={closeModal}>
+      {activeSlide && (
+        <div className="gallery-modal" onClick={closeSlide}>
           <div className="gallery-modal-backdrop"></div>
           <div className="gallery-modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="gallery-modal-close" onClick={closeModal} aria-label="Cerrar vista ampliada">
+            <button className="gallery-modal-close" onClick={closeSlide} aria-label="Cerrar vista ampliada">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
             </button>
             
-            <button className="modal-nav-btn modal-prev-btn" onClick={prevModalSlide} aria-label="Imagen anterior">
+            <button 
+              className="modal-nav-btn modal-prev-btn" 
+              onClick={(e) => {
+                e.stopPropagation();
+                prevModalSlide();
+              }} 
+              aria-label="Imagen anterior"
+            >
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
               </svg>
             </button>
             
-            <button className="modal-nav-btn modal-next-btn" onClick={nextModalSlide} aria-label="Imagen siguiente">
+            <button 
+              className="modal-nav-btn modal-next-btn" 
+              onClick={(e) => {
+                e.stopPropagation();
+                nextModalSlide();
+              }} 
+              aria-label="Imagen siguiente"
+            >
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </button>
             
             <div className="modal-image-container">
-              {activeSlide.imagen ? (
-                <img 
-                  src={activeSlide.imagen} 
-                  alt={activeSlide.titulo} 
-                  className="modal-image"
-                  onError={(e) => {
-                    // Fallback si la imagen no carga
-                    const target = e.target as HTMLImageElement;
-                    target.onerror = null;
-                    target.style.display = 'none';
-                    
-                    // Mostrar un placeholder
-                    const parent = target.parentElement;
-                    if (parent) {
-                      const text = document.createElement('div');
-                      text.className = 'w-full h-full flex items-center justify-center bg-gray-800 text-white text-xl';
-                      text.textContent = activeSlide.titulo;
-                      parent.appendChild(text);
-                    }
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-800 text-white text-xl">
-                  {activeSlide.titulo}
+              <img 
+                src={activeSlide.imagen} 
+                alt={activeSlide.titulo} 
+                className="modal-image"
+                onError={() => {
+                  setActiveSlide({ ...activeSlide, error: true });
+                }}
+              />
+              
+              {activeSlide.error && (
+                <div className="image-error-container">
+                  <svg className="image-error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                  </svg>
+                  <span className="text-xl">Imagen no disponible</span>
                 </div>
               )}
             </div>
