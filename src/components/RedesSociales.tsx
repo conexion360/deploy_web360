@@ -78,8 +78,8 @@ const RedesSociales: React.FC = () => {
           </p>
         </div>
         
-        {/* Tarjetas de redes sociales */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {/* Tarjetas de redes sociales - Modificado para mostrar en una sola fila */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
           {socialNetworks.map((network, index) => (
             <div 
               key={network.name}
@@ -87,14 +87,14 @@ const RedesSociales: React.FC = () => {
               style={{ transitionDelay: `${index * 100}ms` }}
               onClick={() => openSocial(network.url)}
             >
-              <div className="bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-lg h-full">
+              <div className="bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-4 text-center cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-lg h-full">
                 {/* Icono */}
-                <div className="relative mx-auto mb-6 w-20 h-20">
-                  <div className={`${network.color} rounded-full flex items-center justify-center w-20 h-20 transition-transform duration-300 hover:scale-105`}>
+                <div className="relative mx-auto mb-4 w-16 h-16">
+                  <div className={`${network.color} rounded-full flex items-center justify-center w-16 h-16 transition-transform duration-300 hover:scale-105`}>
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 
-                      width="36" 
-                      height="36" 
+                      width="28" 
+                      height="28" 
                       viewBox="0 0 24 24" 
                       fill="currentColor"
                       className="text-white"
@@ -104,13 +104,13 @@ const RedesSociales: React.FC = () => {
                 </div>
                 
                 {/* Contenido */}
-                <h4 className="text-2xl font-bold text-white mb-2">{network.name}</h4>
-                <p className="text-gray-400 mb-4">{network.username}</p>
+                <h4 className="text-xl font-bold text-white mb-1">{network.name}</h4>
+                <p className="text-gray-400 mb-2 text-sm">{network.username}</p>
                 
                 {/* Botón */}
-                <div className="text-secondary font-medium inline-flex items-center gap-1">
+                <div className="text-secondary font-medium inline-flex items-center text-sm gap-1">
                   Seguir
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                   </svg>
                 </div>

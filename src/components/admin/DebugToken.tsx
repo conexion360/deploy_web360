@@ -62,7 +62,7 @@ const DebugToken: React.FC = () => {
   const refreshToken = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
-    window.location.href = '/admin/login';
+    window.location.href = '/admin/rtx322214';
   };
   
   return (

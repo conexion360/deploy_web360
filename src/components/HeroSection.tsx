@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectFade } from 'swiper/modules';
-import MusicPlayer from './MusicPlayer';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -206,23 +205,17 @@ const HeroSection: React.FC = () => {
               >
                 <div className="bg-white/5 backdrop-blur-sm rounded-xl p-2 md:p-4 hover:bg-white/10 transition-all duration-500 transform hover:scale-110 hover:shadow-glow group">
                   <div className="relative">
-                    <span className="text-xl md:text-2xl">{['🎸', '💃', '🎺', '🪘'][index]}</span>
+                    <span className="text-xl md:text-2xl">{genre === 'Rock' ? '🎸' : 
+                      genre === 'Cumbia' ? '💃' : 
+                      genre === 'Salsa' ? '🎺' : 
+                      '🎵'}
+                    </span>
                     <div className="absolute inset-0 bg-secondary/10 filter blur-xl scale-150 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                   </div>
                   <p className="text-xs md:text-sm text-gray-300 mt-2 font-medium">{genre}</p>
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Music player */}
-          <div 
-            className={`opacity-0 transform transition-all duration-1000 mx-auto sm:mx-0 max-w-xs sm:max-w-none ${
-              isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
-            style={{ transitionDelay: '900ms' }}
-          >
-            <MusicPlayer />
           </div>
         </div>
       </div>

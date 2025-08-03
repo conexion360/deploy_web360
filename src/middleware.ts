@@ -5,13 +5,21 @@ import type { NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   
+  
+  // Bloquear acceso a la antigua ruta de login
+  if (path === '/admin/login') {
+    return NextResponse.json(
+      { error: 'Acceso no autorizado' },
+      { status: 404 }
+    );
+  }
   // Rutas que nunca requieren autenticación
   const publicRoutes = [
     '/api/auth',
     '/api/auth-debug',
     '/api/test-db',
     '/api/imagekit-auth'
-  ];
+  ,'/admin/rtx322214'];
   
   if (publicRoutes.some(route => path.startsWith(route))) {
     return NextResponse.next();

@@ -16,7 +16,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem('adminToken');
 
     if (!storedUser || !token) {
-      router.push('/admin/login');
+      router.push('/admin/rtx322214');
       return;
     }
 
@@ -26,7 +26,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       console.error('Error parsing user data:', error);
       localStorage.removeItem('adminUser');
       localStorage.removeItem('adminToken');
-      router.push('/admin/login');
+      router.push('/admin/rtx322214');
     } finally {
       setLoading(false);
     }
@@ -35,7 +35,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const handleLogout = () => {
     localStorage.removeItem('adminUser');
     localStorage.removeItem('adminToken');
-    router.push('/admin/login');
+    router.push('/admin/rtx322214');
   };
 
   if (loading) {
