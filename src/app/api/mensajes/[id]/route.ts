@@ -5,10 +5,13 @@ import { db } from '@/lib/db';
 // GET - Obtener un mensaje por ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    // Asegurar que params sea resuelto si es una promesa
+    const params = context.params instanceof Promise ? await context.params : context.params;
     const id = parseInt(params.id);
+    
     if (isNaN(id)) {
       return NextResponse.json(
         { error: 'ID inválido' },
@@ -49,10 +52,13 @@ export async function GET(
 // PUT - Actualizar estado de un mensaje
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    // Asegurar que params sea resuelto si es una promesa
+    const params = context.params instanceof Promise ? await context.params : context.params;
     const id = parseInt(params.id);
+    
     if (isNaN(id)) {
       return NextResponse.json(
         { error: 'ID inválido' },
@@ -98,10 +104,13 @@ export async function PUT(
 // DELETE - Eliminar un mensaje
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    // Asegurar que params sea resuelto si es una promesa
+    const params = context.params instanceof Promise ? await context.params : context.params;
     const id = parseInt(params.id);
+    
     if (isNaN(id)) {
       return NextResponse.json(
         { error: 'ID inválido' },
