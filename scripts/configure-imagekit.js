@@ -26,12 +26,12 @@ const testConnection = async () => {
   try {
     console.log('Verificando conexión con ImageKit...');
     
-    // Obtener información de la cuenta
-    const accountDetails = await imagekit.getAccountDetails();
+    // En lugar de getAccountDetails (que no existe), usamos listFiles para verificar la conexión
+    const files = await imagekit.listFiles({
+      limit: 1
+    });
+    
     console.log('✅ Conexión con ImageKit exitosa!');
-    console.log(`Detalles de la cuenta:`);
-    console.log(`   Nombre: ${accountDetails.name}`);
-    console.log(`   Email: ${accountDetails.email}`);
     
     // Listar las carpetas existentes
     console.log('\nListando carpetas en ImageKit...');
@@ -67,7 +67,10 @@ const testConnection = async () => {
       if (!existingFolderNames.includes(folderName)) {
         console.log(`   Creando carpeta: ${folderName}`);
         try {
-          await imagekit.createFolder(folderName);
+          await imagekit.createFolder({
+            folderName: folderName,
+            parentFolderPath: '/'
+          });
           console.log(`   ✅ Carpeta ${folderName} creada correctamente`);
         } catch (err) {
           console.error(`   ❌ Error al crear carpeta ${folderName}:`, err.message);

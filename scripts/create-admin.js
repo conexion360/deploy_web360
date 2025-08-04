@@ -62,6 +62,25 @@ const createAdmin = async () => {
         )
       `);
       console.log('✓ Tabla usuarios creada');
+    } else {
+      // Verificar si la columna fecha_actualizacion existe
+      const columnCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns
+          WHERE table_schema = 'public'
+          AND table_name = 'usuarios'
+          AND column_name = 'fecha_actualizacion'
+        )
+      `);
+      
+      if (!columnCheck.rows[0].exists) {
+        console.log('La columna fecha_actualizacion no existe. Añadiéndola...');
+        await client.query(`
+          ALTER TABLE usuarios 
+          ADD COLUMN fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        `);
+        console.log('✓ Columna fecha_actualizacion añadida');
+      }
     }
 
     // Verificar si el administrador ya existe

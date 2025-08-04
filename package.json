@@ -5,13 +5,9 @@
     "scripts": {
         "dev": "next dev",
         "build": "NODE_OPTIONS='--max-old-space-size=4096' next build --no-lint",
-        "start": "node .next/standalone/server.js",
-        "start:next": "next start",
+        "start": "next start",
         "lint": "next lint",
-        "setup-db": "node scripts/setup-db.js",
-        "create-admin": "node scripts/create-admin.js",
-        "db-check": "node scripts/db-healthcheck.js",
-        "configure-imagekit": "node scripts/configure-imagekit.js"
+        "setup-db": "node setup-db.js"
     },
     "dependencies": {
         "@types/sharp": "^0.31.1",
