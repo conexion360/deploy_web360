@@ -366,15 +366,15 @@
 /* Responsividad */
 @media (max-width: 1200px) {
   .carousel-3d-slide.landscape {
-    width: 440px; /* Reducido para pantallas más pequeñas */
+    width: 440px;
     height: 310px;
-    margin-left: -220px !important; /* Centrado adecuado */
+    margin-left: -220px !important;
   }
   
   .carousel-3d-slide.portrait {
-    width: 320px; /* Reducido para pantallas más pequeñas */
+    width: 320px;
     height: 400px;
-    margin-left: -160px !important; /* Centrado adecuado */
+    margin-left: -160px !important;
   }
   
   .carousel-prev-btn, .modal-prev-btn {
@@ -393,92 +393,119 @@
 
 @media (max-width: 768px) {
   .carousel-3d-container {
-    height: 500px; /* Aumentado para mejor visualización en móviles */
-    padding: 0 40px; /* Espacio para los botones */
-    margin-top: 10px; /* Añadir espacio superior */
+    height: 450px;
+    padding: 0 40px;
+    margin-top: 20px;
   }
   
-  .carousel-3d-slide.landscape {
-    width: 300px; /* Tamaño ajustado para móviles */
-    height: 200px;
-    margin-left: -150px !important;
-  }
-  
-  .carousel-3d-slide.portrait {
-    width: 220px; /* Reducido para móviles */
-    height: 320px;
-    margin-left: -110px !important;
-  }
-  
-  .carousel-nav-btn, .modal-nav-btn {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .carousel-nav-btn svg, .modal-nav-btn svg {
-    width: 20px;
-    height: 20px;
-  }
-  
-  /* CORRECCIÓN: Ajustes específicos para móvil */
-  .carousel-3d-stage {
-    height: 100%; /* Usar toda la altura disponible */
-    transform: scale(0.9); /* Reducir ligeramente la escala para mejor visibilidad */
-  }
-  
-  /* Mejora del efecto 3D para móviles */
+  /* Solo mostrar la imagen activa en móviles */
   .carousel-3d-slide:not(.active) {
-    opacity: 0.7 !important; /* Mayor opacidad para mejor visibilidad */
+    display: none !important;
   }
   
-  /* Evitar que las slides se alejen demasiado en el eje Z */
-  .carousel-3d-slide:not(.active) .carousel-3d-slide-inner {
-    transform: none !important; /* Evitar transformaciones adicionales */
+  /* Centrar la imagen activa */
+  .carousel-3d-slide.active {
+    position: relative !important;
+    transform: none !important;
+    opacity: 1 !important;
+    margin: 0 auto !important;
+    left: 50% !important;
+    width: 85vw !important;
+    max-width: 350px !important;
+    height: auto !important;
+  }
+  
+  .carousel-3d-slide.active.landscape {
+    width: 85vw !important;
+    max-width: 350px !important;
+    height: auto !important;
+    margin-left: -42.5vw !important;
+    max-height: 280px !important;
+  }
+  
+  .carousel-3d-slide.active.portrait {
+    width: 70vw !important;
+    max-width: 280px !important;
+    height: auto !important;
+    margin-left: -35vw !important;
+    max-height: 400px !important;
+  }
+  
+  .carousel-3d-slide-inner {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 4/3;
+  }
+  
+  .carousel-3d-slide.portrait .carousel-3d-slide-inner {
+    aspect-ratio: 3/4;
+  }
+  
+  .carousel-3d-image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+  
+  /* Botones de navegación más visibles */
+  .carousel-nav-btn {
+    width: 45px;
+    height: 45px;
+    background-color: rgba(16, 205, 208, 0.8);
+    backdrop-filter: blur(10px);
+  }
+  
+  .carousel-nav-btn:hover {
+    background-color: rgba(16, 205, 208, 0.95);
+  }
+  
+  .carousel-nav-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .carousel-3d-stage {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Ocultar efectos 3D innecesarios */
+  .carousel-3d-overlay,
+  .light-effect,
+  .carousel-3d-reflection {
+    display: none !important;
   }
 }
 
 @media (max-width: 640px) {
   .carousel-3d-container {
-    height: 400px; /* Altura ajustada para móviles pequeños */
-    padding: 0 30px; /* Menos espacio lateral */
-    perspective: 800px; /* Perspectiva reducida para mejor efecto */
+    height: 380px;
+    padding: 0 20px;
+    margin-top: 30px;
   }
   
-  /* Mayor simplificación para dispositivos móviles */
-  .carousel-3d-slide.landscape {
-    width: 260px; /* Tamaño reducido */
-    height: 180px;
-    margin-left: -130px !important;
+  /* Ajustar tamaños para móviles pequeños */
+  .carousel-3d-slide.active.landscape {
+    width: 90vw !important;
+    max-width: 320px !important;
+    margin-left: -45vw !important;
+    max-height: 240px !important;
   }
   
-  .carousel-3d-slide.portrait {
-    width: 180px; /* Tamaño reducido */
-    height: 260px;
-    margin-left: -90px !important;
+  .carousel-3d-slide.active.portrait {
+    width: 75vw !important;
+    max-width: 250px !important;
+    margin-left: -37.5vw !important;
+    max-height: 350px !important;
   }
   
-  /* Simplificar el carrusel para móviles */
-  .carousel-3d-slide:not(.active) {
-    transform: translateX(0) translateZ(-100px) !important;
-    opacity: 0.4 !important;
+  .carousel-nav-btn {
+    width: 40px;
+    height: 40px;
   }
   
-  /* Slides anteriores (a la izquierda) */
-  .carousel-3d-slide:not(.active):nth-child(odd) {
-    transform: translateX(-120px) translateZ(-50px) rotateY(10deg) !important;
-  }
-  
-  /* Slides siguientes (a la derecha) */
-  .carousel-3d-slide:not(.active):nth-child(even) {
-    transform: translateX(120px) translateZ(-50px) rotateY(-10deg) !important;
-  }
-  
-  .carousel-nav-btn, .modal-nav-btn {
-    width: 36px;
-    height: 36px;
-  }
-  
-  /* Ajustes para botones en la vista de galería en móviles pequeños */
   .carousel-prev-btn {
     left: 5px;
   }
@@ -487,19 +514,33 @@
     right: 5px;
   }
   
-  /* Ajustes para botones en el modal en móviles pequeños */
-  .modal-prev-btn {
-    left: 10px;
-  }
-  
-  .modal-next-btn {
-    right: 10px;
-  }
-  
-  /* Mayor espacio para el contenedor */
   .gallery-section {
-    padding-bottom: 8rem;
+    padding-bottom: 6rem;
   }
+}
+
+/* Indicadores de posición para móvil */
+.carousel-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-bottom: 20px;
+}
+
+.carousel-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.carousel-indicator.active {
+  background-color: #10CDD0;
+  transform: scale(1.2);
 }
 
 /* Mejoras para accesibilidad */

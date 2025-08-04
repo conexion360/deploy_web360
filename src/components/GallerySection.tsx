@@ -160,7 +160,12 @@ const GallerySection: React.FC = () => {
 
   // Calcular estilos para el efecto 3D (solo desktop)
   const getImageStyle = (index: number): React.CSSProperties => {
-    if (filteredImages.length === 0 || isMobile) return {};
+    if (filteredImages.length === 0) return {};
+    
+    // En móvil, no aplicar transformaciones 3D
+    if (isMobile) {
+      return index === adjustedCurrentIndex ? {} : { display: 'none' };
+    }
     
     let indexDiff = index - adjustedCurrentIndex;
     
@@ -566,23 +571,28 @@ const GallerySection: React.FC = () => {
               
               <div className="carousel-3d-stage">
                 {filteredImages.map((slide, index) => {
-                  // Calculamos si es un portrait o landscape
                   const isPortrait = slide.isPortrait;
+                  const isActive = index === adjustedCurrentIndex;
                   
-                  // Calculamos el margen izquierdo según orientación (solo desktop)
-                  const marginLeft = !isMobile ? (isPortrait ? '-180px' : '-260px') : '0';
+                  // En móvil, solo renderizar la imagen activa
+                  if (isMobile && !isActive) {
+                    return null;
+                  }
+                  
+                  // Calcular el margen izquierdo según orientación
+                  const marginLeft = isMobile ? '0' : (isPortrait ? '-180px' : '-260px');
                   
                   return (
                     <div
                       key={slide.id}
-                      className={`carousel-3d-slide ${index === adjustedCurrentIndex ? 'active' : ''} ${isPortrait ? 'portrait' : 'landscape'}`}
+                      className={`carousel-3d-slide ${isActive ? 'active' : ''} ${isPortrait ? 'portrait' : 'landscape'}`}
                       style={{
-                        ...(!isMobile ? getImageStyle(index) : {}),
+                        ...(getImageStyle(index)),
                         marginLeft: marginLeft
                       }}
-                      onClick={() => index === adjustedCurrentIndex ? openSlide(slide, index) : goToSlide(index)}
+                      onClick={() => isActive && !isMobile ? openSlide(slide, index) : !isActive && goToSlide(index)}
                     >
-                      {isVisible(index) && (
+                      {(isVisible(index) || isActive) && (
                         <div 
                           className="carousel-3d-slide-inner"
                           style={getSlideInnerStyle(slide)}
@@ -597,10 +607,8 @@ const GallerySection: React.FC = () => {
                               height: '100%'
                             }}
                             onLoad={(e) => {
-                              // Marcar la imagen como cargada y verificar orientación
                               const target = e.target as HTMLImageElement;
                               const isPortrait = target.naturalHeight > target.naturalWidth;
-                              console.log(`Imagen ID ${slide.id} cargada: ${slide.imagen}`, `Dimensiones: ${target.naturalWidth}x${target.naturalHeight}`, `Es vertical: ${isPortrait}`);
                               
                               setGalleryImages(prev => 
                                 prev.map(image => 
