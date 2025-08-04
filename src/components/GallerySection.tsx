@@ -24,10 +24,26 @@ const GallerySection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const minSwipeDistance = 50; // Distancia mínima para considerar un swipe
   const autoplayIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const imageCheckRef = useRef<Record<number, HTMLImageElement>>({});
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detectar si es móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Cargar imágenes de la galería desde la API
   useEffect(() => {
@@ -82,6 +98,12 @@ const GallerySection: React.FC = () => {
     const total = filteredImages.length;
     const indices = [];
     
+    // En móvil solo mostramos la imagen activa
+    if (isMobile) {
+      return [adjustedCurrentIndex];
+    }
+    
+    // En desktop mostramos múltiples imágenes
     for (let i = -2; i <= 2; i++) {
       const index = (adjustedCurrentIndex + i + total) % total;
       indices.push(index);
@@ -134,11 +156,11 @@ const GallerySection: React.FC = () => {
         }
       }
     });
-  }, [currentIndex, galleryImages, activeCategory]);
+  }, [currentIndex, galleryImages, activeCategory, isMobile]);
 
-  // Calcular estilos para el efecto 3D
+  // Calcular estilos para el efecto 3D (solo desktop)
   const getImageStyle = (index: number): React.CSSProperties => {
-    if (filteredImages.length === 0) return {};
+    if (filteredImages.length === 0 || isMobile) return {};
     
     let indexDiff = index - adjustedCurrentIndex;
     
@@ -159,16 +181,13 @@ const GallerySection: React.FC = () => {
     let scale = 1;
     const radius = 800;
     
-    // Verificar si la imagen actual es vertical
-    const isVertical = filteredImages[index]?.isPortrait;
-    
     if (indexDiff === 0) {
       // Imagen central
       translateZ = 0;
       translateX = 0;
       rotateY = 0;
       opacity = 1;
-      zIndex = 30; // Valor más alto para la imagen central
+      zIndex = 30;
       scale = 1;
     } else if (absoluteDiff <= 2) {
       // Efecto circular
@@ -176,11 +195,7 @@ const GallerySection: React.FC = () => {
       translateZ = -radius * (1 - Math.cos(angle)) / 2;
       translateX = radius * Math.sin(angle);
       rotateY = -indexDiff * 35;
-      opacity = 1 - (absoluteDiff * 0.18); // Más transparencia para diferenciar mejor
-      
-      // CORRECCIÓN: Asignación de z-index según la posición
-      // Crucial: imágenes a la izquierda (negativo) tienen z-index menor que las de la derecha
-      // Esto asegura que las imágenes "traseras" (a la izquierda) estén por detrás de las imágenes "delanteras" (a la derecha)
+      opacity = 1 - (absoluteDiff * 0.18);
       zIndex = 20 - (absoluteDiff * 5) - (indexDiff < 0 ? 10 : 0);
       scale = 0.92 - (absoluteDiff * 0.16);
     } else {
@@ -203,17 +218,23 @@ const GallerySection: React.FC = () => {
 
   // Calcular dimensiones apropiadas para imágenes en carrusel
   const getSlideInnerStyle = (slide: GalleryImage): React.CSSProperties => {
+    // En móvil, usar estilos responsivos definidos en CSS
+    if (isMobile) {
+      return {};
+    }
+    
+    // En desktop, mantener los estilos originales
     if (slide.isPortrait) {
       return {
-        width: '360px',  // Más estrecho para fotos verticales
-        height: '423px', // Aumentar la altura para fotos verticales (antes 540px)
+        width: '360px',
+        height: '423px',
         overflow: 'hidden',
         borderRadius: '25px'
       };
     } else {
       return {
-        width: '523px',  // Más ancho para fotos horizontales
-        height: '370px', // Menos alto para fotos horizontales
+        width: '523px',
+        height: '370px',
         overflow: 'hidden',
         borderRadius: '25px'
       };
@@ -298,6 +319,32 @@ const GallerySection: React.FC = () => {
     if (autoplayIntervalRef.current) {
       clearInterval(autoplayIntervalRef.current);
       autoplayIntervalRef.current = null;
+    }
+  };
+
+  // Manejadores de gestos táctiles
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && filteredImages.length > 0) {
+      nextSlide();
+    }
+    
+    if (isRightSwipe && filteredImages.length > 0) {
+      prevSlide();
     }
   };
 
@@ -492,6 +539,9 @@ const GallerySection: React.FC = () => {
             className="carousel-3d-container reveal-on-scroll"
             onMouseEnter={stopAutoplay}
             onMouseLeave={startAutoplay}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
           >
             <div className="carousel-3d-wrapper">
               <button 
@@ -519,15 +569,15 @@ const GallerySection: React.FC = () => {
                   // Calculamos si es un portrait o landscape
                   const isPortrait = slide.isPortrait;
                   
-                  // Calculamos el margen izquierdo según orientación
-                  const marginLeft = isPortrait ? '-180px' : '-260px';
+                  // Calculamos el margen izquierdo según orientación (solo desktop)
+                  const marginLeft = !isMobile ? (isPortrait ? '-180px' : '-260px') : '0';
                   
                   return (
                     <div
                       key={slide.id}
                       className={`carousel-3d-slide ${index === adjustedCurrentIndex ? 'active' : ''} ${isPortrait ? 'portrait' : 'landscape'}`}
                       style={{
-                        ...getImageStyle(index),
+                        ...(!isMobile ? getImageStyle(index) : {}),
                         marginLeft: marginLeft
                       }}
                       onClick={() => index === adjustedCurrentIndex ? openSlide(slide, index) : goToSlide(index)}
@@ -586,9 +636,13 @@ const GallerySection: React.FC = () => {
                             </div>
                           )}
                           
-                          <div className="carousel-3d-overlay"></div>
-                          <div className="light-effect"></div>
-                          <div className="carousel-3d-reflection"></div>
+                          {!isMobile && (
+                            <>
+                              <div className="carousel-3d-overlay"></div>
+                              <div className="light-effect"></div>
+                              <div className="carousel-3d-reflection"></div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -599,6 +653,20 @@ const GallerySection: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Indicadores de posición para móvil */}
+      {filteredImages.length > 0 && (
+        <div className="carousel-indicators md:hidden">
+          {filteredImages.map((_, index) => (
+            <button
+              key={index}
+              className={`carousel-indicator ${index === adjustedCurrentIndex ? 'active' : ''}`}
+              onClick={() => goToSlide(index)}
+              aria-label={`Ir a imagen ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
       
       {/* Modal para vista ampliada */}
       {activeSlide && (

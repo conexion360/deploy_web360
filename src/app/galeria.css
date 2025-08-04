@@ -363,18 +363,20 @@
   }
 }
 
-/* Responsividad */
+/* ========== ESTILOS RESPONSIVOS MEJORADOS PARA MÓVILES ========== */
+
+/* Tablets y pantallas medianas */
 @media (max-width: 1200px) {
   .carousel-3d-slide.landscape {
-    width: 440px; /* Reducido para pantallas más pequeñas */
+    width: 440px;
     height: 310px;
-    margin-left: -220px !important; /* Centrado adecuado */
+    margin-left: -220px !important;
   }
   
   .carousel-3d-slide.portrait {
-    width: 320px; /* Reducido para pantallas más pequeñas */
+    width: 320px;
     height: 400px;
-    margin-left: -160px !important; /* Centrado adecuado */
+    margin-left: -160px !important;
   }
   
   .carousel-prev-btn, .modal-prev-btn {
@@ -391,94 +393,182 @@
   }
 }
 
+/* ========== DISEÑO MÓVIL COMPLETAMENTE REDISEÑADO ========== */
 @media (max-width: 768px) {
+  /* Cambiar a diseño de carrusel simple para móviles */
   .carousel-3d-container {
-    height: 500px; /* Aumentado para mejor visualización en móviles */
-    padding: 0 40px; /* Espacio para los botones */
-    margin-top: 10px; /* Añadir espacio superior */
+    height: auto;
+    padding: 0;
+    margin: 20px 0;
+    perspective: none;
+    overflow: visible;
   }
   
-  .carousel-3d-slide.landscape {
-    width: 300px; /* Tamaño ajustado para móviles */
-    height: 200px;
-    margin-left: -150px !important;
+  .carousel-3d-wrapper {
+    position: relative;
+    width: 100%;
+    height: auto;
+    display: block;
   }
   
-  .carousel-3d-slide.portrait {
-    width: 220px; /* Reducido para móviles */
-    height: 320px;
-    margin-left: -110px !important;
+  .carousel-3d-stage {
+    position: relative;
+    width: 100%;
+    height: auto;
+    perspective: none;
+    transform-style: flat;
+    padding: 0 50px; /* Espacio para botones */
   }
   
-  .carousel-nav-btn, .modal-nav-btn {
+  /* Mostrar solo la imagen activa */
+  .carousel-3d-slide {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    opacity: 1 !important;
+    display: none;
+    left: 0 !important;
+    z-index: 1 !important;
+  }
+  
+  .carousel-3d-slide.active {
+    display: block !important;
+    z-index: 10 !important;
+  }
+  
+  /* Ajustar tamaños de las imágenes para móvil */
+  .carousel-3d-slide-inner {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 4/5; /* Proporción fija para todas las imágenes */
+    max-height: 400px;
+    margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+  
+  .carousel-3d-slide.landscape .carousel-3d-slide-inner {
+    aspect-ratio: 16/9;
+    max-height: 300px;
+  }
+  
+  .carousel-3d-slide.portrait .carousel-3d-slide-inner {
+    aspect-ratio: 3/4;
+    max-height: 450px;
+  }
+  
+  /* Eliminar efectos 3D innecesarios */
+  .carousel-3d-overlay,
+  .light-effect,
+  .carousel-3d-reflection {
+    display: none;
+  }
+  
+  /* Botones de navegación mejorados para móvil */
+  .carousel-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    background-color: rgba(16, 205, 208, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .carousel-nav-btn:active {
+    transform: translateY(-50%) scale(0.95);
+    background-color: rgba(16, 205, 208, 1);
+  }
+  
+  .carousel-prev-btn {
+    left: 10px;
+  }
+  
+  .carousel-next-btn {
+    right: 10px;
+  }
+  
+  /* Indicadores de posición */
+  .carousel-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+    padding-bottom: 10px;
+  }
+  
+  .carousel-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .carousel-indicator.active {
+    width: 24px;
+    border-radius: 4px;
+    background-color: #10CDD0;
+  }
+}
+
+/* ========== MÓVILES PEQUEÑOS ========== */
+@media (max-width: 640px) {
+  .gallery-section {
+    padding: 3rem 0;
+    min-height: auto;
+  }
+  
+  .gallery-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Filtros de categoría más compactos */
+  .flex.flex-wrap.justify-center.gap-2 {
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .flex.flex-wrap.justify-center.gap-2 button {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  /* Contenedor del carrusel más compacto */
+  .carousel-3d-stage {
+    padding: 0 45px;
+  }
+  
+  /* Ajustar altura máxima de las imágenes */
+  .carousel-3d-slide-inner {
+    max-height: 350px;
+  }
+  
+  .carousel-3d-slide.landscape .carousel-3d-slide-inner {
+    aspect-ratio: 16/10;
+    max-height: 250px;
+  }
+  
+  .carousel-3d-slide.portrait .carousel-3d-slide-inner {
+    aspect-ratio: 3/4;
+    max-height: 380px;
+  }
+  
+  /* Botones más pequeños pero accesibles */
+  .carousel-nav-btn {
     width: 40px;
     height: 40px;
   }
   
-  .carousel-nav-btn svg, .modal-nav-btn svg {
-    width: 20px;
-    height: 20px;
+  .carousel-nav-btn svg {
+    width: 18px;
+    height: 18px;
   }
   
-  /* CORRECCIÓN: Ajustes específicos para móvil */
-  .carousel-3d-stage {
-    height: 100%; /* Usar toda la altura disponible */
-    transform: scale(0.9); /* Reducir ligeramente la escala para mejor visibilidad */
-  }
-  
-  /* Mejora del efecto 3D para móviles */
-  .carousel-3d-slide:not(.active) {
-    opacity: 0.7 !important; /* Mayor opacidad para mejor visibilidad */
-  }
-  
-  /* Evitar que las slides se alejen demasiado en el eje Z */
-  .carousel-3d-slide:not(.active) .carousel-3d-slide-inner {
-    transform: none !important; /* Evitar transformaciones adicionales */
-  }
-}
-
-@media (max-width: 640px) {
-  .carousel-3d-container {
-    height: 400px; /* Altura ajustada para móviles pequeños */
-    padding: 0 30px; /* Menos espacio lateral */
-    perspective: 800px; /* Perspectiva reducida para mejor efecto */
-  }
-  
-  /* Mayor simplificación para dispositivos móviles */
-  .carousel-3d-slide.landscape {
-    width: 260px; /* Tamaño reducido */
-    height: 180px;
-    margin-left: -130px !important;
-  }
-  
-  .carousel-3d-slide.portrait {
-    width: 180px; /* Tamaño reducido */
-    height: 260px;
-    margin-left: -90px !important;
-  }
-  
-  /* Simplificar el carrusel para móviles */
-  .carousel-3d-slide:not(.active) {
-    transform: translateX(0) translateZ(-100px) !important;
-    opacity: 0.4 !important;
-  }
-  
-  /* Slides anteriores (a la izquierda) */
-  .carousel-3d-slide:not(.active):nth-child(odd) {
-    transform: translateX(-120px) translateZ(-50px) rotateY(10deg) !important;
-  }
-  
-  /* Slides siguientes (a la derecha) */
-  .carousel-3d-slide:not(.active):nth-child(even) {
-    transform: translateX(120px) translateZ(-50px) rotateY(-10deg) !important;
-  }
-  
-  .carousel-nav-btn, .modal-nav-btn {
-    width: 36px;
-    height: 36px;
-  }
-  
-  /* Ajustes para botones en la vista de galería en móviles pequeños */
   .carousel-prev-btn {
     left: 5px;
   }
@@ -486,8 +576,95 @@
   .carousel-next-btn {
     right: 5px;
   }
+}
+
+/* ========== MÓVILES MUY PEQUEÑOS ========== */
+@media (max-width: 480px) {
+  .gallery-section {
+    padding: 2.5rem 0;
+  }
   
-  /* Ajustes para botones en el modal en móviles pequeños */
+  .container.mx-auto.max-w-7xl.px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Hacer el contenedor más pequeño */
+  .carousel-3d-stage {
+    padding: 0 40px;
+  }
+  
+  /* Imágenes aún más pequeñas */
+  .carousel-3d-slide-inner {
+    max-height: 320px;
+    border-radius: 16px;
+  }
+  
+  .carousel-3d-slide.landscape .carousel-3d-slide-inner {
+    max-height: 220px;
+  }
+  
+  .carousel-3d-slide.portrait .carousel-3d-slide-inner {
+    max-height: 340px;
+  }
+  
+  /* Botones mínimos pero usables */
+  .carousel-nav-btn {
+    width: 36px;
+    height: 36px;
+    background-color: rgba(16, 205, 208, 0.95);
+  }
+  
+  .carousel-prev-btn {
+    left: 2px;
+  }
+  
+  .carousel-next-btn {
+    right: 2px;
+  }
+  
+  /* Indicadores más pequeños */
+  .carousel-indicator {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .carousel-indicator.active {
+    width: 18px;
+  }
+}
+
+/* ========== ESTILOS PARA EL MODAL EN MÓVIL ========== */
+@media (max-width: 768px) {
+  .gallery-modal {
+    padding: 0;
+  }
+  
+  .gallery-modal-content {
+    max-width: 100vw;
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+  }
+  
+  .gallery-modal-close {
+    top: 1rem;
+    right: 1rem;
+    background-color: rgba(0, 0, 0, 0.7);
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal-nav-btn {
+    width: 44px;
+    height: 44px;
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  
   .modal-prev-btn {
     left: 10px;
   }
@@ -496,13 +673,72 @@
     right: 10px;
   }
   
-  /* Mayor espacio para el contenedor */
-  .gallery-section {
-    padding-bottom: 8rem;
+  .modal-image-container {
+    padding: 60px 10px 10px 10px; /* Espacio para el botón de cerrar */
+  }
+  
+  .modal-image {
+    max-width: 100%;
+    max-height: calc(100vh - 80px);
+    border-radius: 0;
+  }
+  
+  .portrait .modal-image {
+    max-width: 95vw;
+    max-height: calc(100vh - 80px);
+  }
+  
+  .landscape .modal-image {
+    max-width: 100%;
+    max-height: calc(100vh - 120px);
   }
 }
 
-/* Mejoras para accesibilidad */
+/* ========== ANIMACIONES SUAVES PARA MÓVIL ========== */
+@media (max-width: 768px) {
+  /* Transición suave entre imágenes */
+  .carousel-3d-slide {
+    transition: opacity 0.3s ease;
+  }
+  
+  .carousel-3d-slide.transitioning-out {
+    opacity: 0;
+  }
+  
+  .carousel-3d-slide.transitioning-in {
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+  }
+  
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* ========== OPTIMIZACIONES PARA TOUCH ========== */
+@media (hover: none) and (pointer: coarse) {
+  /* Hacer los botones más grandes para dedos */
+  .carousel-nav-btn {
+    width: 48px;
+    height: 48px;
+  }
+  
+  /* Eliminar efectos hover que no funcionan en touch */
+  .carousel-nav-btn:hover {
+    background-color: rgba(16, 205, 208, 0.9);
+    transform: translateY(-50%);
+  }
+  
+  /* Área de toque más grande para los indicadores */
+  .carousel-indicator {
+    padding: 4px;
+    margin: -4px;
+  }
+}
+
+/* ========== MEJORAS DE ACCESIBILIDAD ========== */
 .carousel-nav-btn:focus,
 .modal-nav-btn:focus,
 .gallery-modal-close:focus {
@@ -648,68 +884,6 @@
   height: auto;
 }
 
-/* Mejoras específicas para móviles */
-@media (max-width: 480px) {
-  .gallery-section {
-    padding: 4rem 0;
-    min-height: 500px;
-  }
-  
-  .gallery-title {
-    font-size: 1.75rem;
-  }
-  
-  .carousel-3d-container {
-    height: 360px;
-    padding: 0 25px;
-    margin-top: 30px; /* Más espacio superior */
-  }
-  
-  /* Cambios radicales para móviles pequeños: simplificar a carrusel plano */
-  .carousel-3d-slide {
-    transform-style: flat !important; /* Eliminar efecto 3D para móviles pequeños */
-  }
-  
-  .carousel-3d-slide.landscape {
-    width: 220px;
-    height: 150px;
-    margin-left: -110px !important;
-  }
-  
-  .carousel-3d-slide.portrait {
-    width: 160px;
-    height: 230px;
-    margin-left: -80px !important;
-  }
-  
-  /* Simplificar enormemente para dispositivos muy pequeños */
-  .carousel-3d-slide:not(.active) {
-    display: none !important; /* Ocultar todas las slides excepto la activa */
-  }
-  
-  /* Solo mostrar flechas de navegación */
-  .carousel-nav-btn {
-    width: 32px;
-    height: 32px;
-    z-index: 100; /* Asegurar que estén por encima */
-    background-color: rgba(16, 205, 208, 0.7); /* Más visible */
-  }
-  
-  .carousel-nav-btn svg {
-    width: 16px;
-    height: 16px;
-  }
-  
-  /* Ajustes para modal en dispositivos muy pequeños */
-  .portrait .modal-image {
-    max-width: 85vw;
-  }
-  
-  .landscape .modal-image {
-    max-width: 95vw;
-  }
-}
-
 /* Carga progresiva para mejorar la experiencia */
 .carousel-3d-image {
   opacity: 0;
@@ -739,4 +913,29 @@
   border-top-color: #10CDD0;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+/* Animación de partículas flotantes */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-30px) translateX(15px);
+  }
+  50% {
+    transform: translateY(-15px) translateX(30px);
+  }
+  75% {
+    transform: translateY(-40px) translateX(-15px);
+  }
+}
+
+.gallery-particle {
+  position: absolute;
+  background-color: rgba(16, 205, 208, 0.3);
+  border-radius: 50%;
+  opacity: 0.2;
+  pointer-events: none;
+  animation: float 30s linear infinite;
 }
