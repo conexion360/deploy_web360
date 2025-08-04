@@ -465,7 +465,7 @@
 /* ===== ESTILOS DEL CARRUSEL 3D ===== */
 .carousel-3d-container {
   position: relative;
-  height: 650px; /* Aumentada para fotos verticales (antes 600px) */
+  height: 600px; /* ⚠️ AUMENTADO: para acomodar mejor las fotos verticales (antes 650px) */
   width: 100%;
   margin: 0 auto;
   padding: 0 60px;
@@ -476,7 +476,7 @@
 /* Ajustes para fotos verticales vs horizontales */
 .carousel-3d-slide.portrait .carousel-3d-slide-inner {
   width: 360px;  /* Más estrecho para fotos verticales */
-  height: 580px; /* Aumentada la altura para fotos verticales (antes 520px) */
+  height: 560px; /* ⚠️ AUMENTADO: altura para fotos verticales (antes 580px) */
 }
 
 .carousel-3d-slide.landscape .carousel-3d-slide-inner {
@@ -507,45 +507,8 @@
   object-position: center;  /* Centrar para verticales */
 }
 
-/* Títulos y descripciones dentro del carrusel */
-.carousel-3d-caption {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20px;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.3s ease;
-  z-index: 3;
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
-  text-align: left;
-  pointer-events: none; /* Evita que bloquee clics */
-}
-
-.carousel-3d-slide:hover .carousel-3d-caption {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.carousel-3d-title {
-  color: white;
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.carousel-3d-category {
-  display: inline-block;
-  background-color: rgba(16, 205, 208, 0.3);
-  color: #10CDD0;
-  padding: 2px 8px;
-  border-radius: 50px;
-  font-size: 0.8rem;
-  margin-top: 8px;
-}
+/* ⚠️ ELIMINADO: Títulos y descripciones dentro del carrusel */
+/* Se elimina la sección de carousel-3d-caption por petición del cliente */
 
 /* Mejoras para el modal */
 .modal-image-container {
@@ -557,7 +520,7 @@
 }
 
 .modal-image-container.portrait {
-  max-height: 85vh;
+  max-height: 90vh; /* ⚠️ AUMENTADO: para imágenes verticales (antes 85vh) */
 }
 
 .modal-image-container.landscape {
@@ -573,7 +536,7 @@
 }
 
 .portrait .modal-image {
-  max-height: 85vh;
+  max-height: 90vh; /* ⚠️ AUMENTADO: para imágenes verticales (antes 85vh) */
   max-width: 70vw;
   width: auto;
 }
@@ -584,25 +547,14 @@
   height: auto;
 }
 
-/* Modal info siempre visible */
-.modal-info {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20px;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-  color: white;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-  z-index: 10;
-}
+/* ⚠️ ELIMINADO: Modal info con títulos */
+/* Se elimina la sección de modal-info por petición del cliente */
 
 /* Mejoras responsivas */
 @media (max-width: 1024px) {
   .carousel-3d-slide.portrait .carousel-3d-slide-inner {
     width: 280px;
-    height: 480px; /* Aumentada para evitar recortes */
+    height: 520px; /* ⚠️ AUMENTADO: para evitar recortes (antes 480px) */
   }
   
   .carousel-3d-slide.landscape .carousel-3d-slide-inner {
@@ -619,14 +571,14 @@
   }
   
   .carousel-3d-container {
-    height: 580px; /* Aumentada para acomodar las fotos verticales */
+    height: 620px; /* ⚠️ AUMENTADO: para acomodar las fotos verticales (antes 580px) */
   }
 }
 
 @media (max-width: 768px) {
   .carousel-3d-slide.portrait .carousel-3d-slide-inner {
     width: 240px;
-    height: 420px; /* Aumentada para evitar recortes */
+    height: 460px; /* ⚠️ AUMENTADO: para evitar recortes (antes 420px) */
   }
   
   .carousel-3d-slide.landscape .carousel-3d-slide-inner {
@@ -643,14 +595,14 @@
   }
   
   .carousel-3d-container {
-    height: 520px; /* Aumentada para acomodar las fotos verticales */
+    height: 560px; /* ⚠️ AUMENTADO: para acomodar las fotos verticales (antes 520px) */
   }
 }
 
 @media (max-width: 640px) {
   .carousel-3d-slide.portrait .carousel-3d-slide-inner {
     width: 200px;
-    height: 380px; /* Aumentada para evitar recortes */
+    height: 420px; /* ⚠️ AUMENTADO: para evitar recortes (antes 380px) */
   }
   
   .carousel-3d-slide.landscape .carousel-3d-slide-inner {
@@ -667,7 +619,7 @@
   }
   
   .carousel-3d-container {
-    height: 480px; /* Aumentada para acomodar las fotos verticales */
+    height: 520px; /* ⚠️ AUMENTADO: para acomodar las fotos verticales (antes 480px) */
   }
 }
 

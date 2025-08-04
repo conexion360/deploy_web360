@@ -177,7 +177,10 @@ const GallerySection: React.FC = () => {
       translateX = radius * Math.sin(angle);
       rotateY = -indexDiff * 35;
       opacity = 1 - (absoluteDiff * 0.15);
-      zIndex = 5 - absoluteDiff;
+      
+      // Ajuste crítico: asignar z-index en función de la distancia
+      // Los elementos más lejanos tienen menor z-index
+      zIndex = 9 - absoluteDiff * 2;
       scale = 0.9 - (absoluteDiff * 0.15);
     } else {
       // Imágenes muy alejadas
@@ -202,7 +205,7 @@ const GallerySection: React.FC = () => {
     if (slide.isPortrait) {
       return {
         width: '360px',  // Más estrecho para fotos verticales
-        height: '540px', // Aumentada la altura para fotos verticales (antes 540px)
+        height: '620px', // ⚠️ AUMENTADO: altura para fotos verticales (antes 540px)
         overflow: 'hidden',
         borderRadius: '20px'
       };
@@ -586,13 +589,7 @@ const GallerySection: React.FC = () => {
                           <div className="light-effect"></div>
                           <div className="carousel-3d-reflection"></div>
                           
-                          {/* Mostrar título en hover */}
-                          <div className="carousel-3d-caption">
-                            <h3 className="carousel-3d-title">{slide.titulo}</h3>
-                            {slide.categoria && (
-                              <span className="carousel-3d-category">{slide.categoria}</span>
-                            )}
-                          </div>
+                          {/* Se eliminan los títulos de las imágenes como solicitado */}
                         </div>
                       )}
                     </div>
@@ -675,18 +672,7 @@ const GallerySection: React.FC = () => {
                 </div>
               )}
               
-              {/* Mostrar información */}
-              <div className="modal-info">
-                <h3 className="text-xl font-bold text-white">{activeSlide.titulo}</h3>
-                {activeSlide.descripcion && (
-                  <p className="text-gray-300 mt-2">{activeSlide.descripcion}</p>
-                )}
-                {activeSlide.categoria && (
-                  <span className="inline-block mt-3 px-3 py-1 bg-secondary/30 text-secondary text-sm rounded-full">
-                    {activeSlide.categoria}
-                  </span>
-                )}
-              </div>
+              {/* Se eliminan los títulos también del modal como solicitado */}
             </div>
           </div>
         </div>
