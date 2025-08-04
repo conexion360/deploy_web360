@@ -1,90 +1,126 @@
-﻿// src/app/api/auth-debug/route.ts
+﻿// src/app/api/auth/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
     
-    // Log the authentication attempt
-    console.log('DEBUG: Auth attempt with email:', email);
-    
-    // Check database connection
-    try {
-      await db.query('SELECT 1');
-      console.log('DEBUG: Database connection successful');
-    } catch (dbError: any) {
-      console.error('DEBUG: Database connection failed:', dbError);
-      return NextResponse.json(
-        { error: 'Database connection failed', details: dbError.message },
-        { status: 500 }
-      );
-    }
-
-    // Look for user in database
+    // Buscar usuario en la base de datos
     const userResult = await db.query(
       'SELECT * FROM usuarios WHERE email = $1',
       [email]
     );
 
-    // Log user search result
+    // Verificar si el usuario existe
     if (userResult.rows.length === 0) {
-      console.log('DEBUG: User not found in database');
-      
-      // List all users in the database
-      const allUsers = await db.query('SELECT id, nombre, email, rol FROM usuarios');
-      console.log('DEBUG: All users in database:', allUsers.rows);
-      
       return NextResponse.json(
-        { 
-          error: 'User not found',
-          allUsers: allUsers.rows
-        },
-        { status: 404 }
+        { error: 'Credenciales inválidas' },
+        { status: 401 }
       );
     }
 
-    console.log('DEBUG: User found:', {
-      id: userResult.rows[0].id,
-      nombre: userResult.rows[0].nombre,
-      email: userResult.rows[0].email,
-      rol: userResult.rows[0].rol
-    });
+    const user = userResult.rows[0];
+    
+    // Verificar contraseña
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    
+    if (!passwordMatch) {
+      return NextResponse.json(
+        { error: 'Credenciales inválidas' },
+        { status: 401 }
+      );
+    }
 
-    // Check if password field exists and has expected format
-    const storedPassword = userResult.rows[0].password;
-    console.log('DEBUG: Stored password format check:', {
-      exists: !!storedPassword,
-      length: storedPassword ? storedPassword.length : 0,
-      startsWithBcrypt: storedPassword ? storedPassword.startsWith('$2') : false
-    });
+    // Generar token JWT
+    const token = jwt.sign(
+      {
+        id: user.id,
+        nombre: user.nombre,
+        email: user.email,
+        rol: user.rol
+      },
+      process.env.JWT_SECRET || 'secret_key',
+      { expiresIn: '24h' }
+    );
 
-    // Return debug info
+    // Actualizar último acceso
+    await db.query(
+      'UPDATE usuarios SET ultimo_acceso = CURRENT_TIMESTAMP WHERE id = $1',
+      [user.id]
+    );
+
+    // Retornar respuesta con token y datos del usuario
     return NextResponse.json({
-      debug: true,
-      userExists: true,
-      email: email,
-      userInfo: {
-        id: userResult.rows[0].id,
-        nombre: userResult.rows[0].nombre,
-        email: userResult.rows[0].email,
-        rol: userResult.rows[0].rol,
-        ultimo_acceso: userResult.rows[0].ultimo_acceso
-      },
-      passwordInfo: {
-        exists: !!storedPassword,
-        length: storedPassword ? storedPassword.length : 0,
-        startsWithBcrypt: storedPassword ? storedPassword.startsWith('$2') : false
-      },
-      jwtSecret: {
-        exists: !!process.env.JWT_SECRET,
-        length: process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0
+      token,
+      user: {
+        id: user.id,
+        nombre: user.nombre,
+        email: user.email,
+        rol: user.rol
       }
     });
   } catch (error: any) {
-    console.error('DEBUG: Auth debug error:', error);
+    console.error('Error de autenticación:', error);
     return NextResponse.json(
-      { error: 'Auth debug error', details: error.message },
+      { error: 'Error en el servidor' },
+      { status: 500 }
+    );
+  }
+}
+
+// Para renovación de token
+export async function GET(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Token no proporcionado' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split(' ')[1];
+    const secret = process.env.JWT_SECRET || 'secret_key';
+    
+    try {
+      // Verificar el token
+      const decoded = jwt.verify(token, secret) as any;
+
+      // Generar un nuevo token
+      const newToken = jwt.sign(
+        {
+          id: decoded.id,
+          nombre: decoded.nombre,
+          email: decoded.email,
+          rol: decoded.rol
+        },
+        secret,
+        { expiresIn: '24h' }
+      );
+
+      return NextResponse.json({
+        token: newToken,
+        user: {
+          id: decoded.id,
+          nombre: decoded.nombre,
+          email: decoded.email,
+          rol: decoded.rol
+        }
+      });
+    } catch (jwtError) {
+      return NextResponse.json(
+        { error: 'Token inválido o expirado' },
+        { status: 401 }
+      );
+    }
+  } catch (error) {
+    console.error('Error en renovación de token:', error);
+    return NextResponse.json(
+      { error: 'Error en el servidor' },
       { status: 500 }
     );
   }
