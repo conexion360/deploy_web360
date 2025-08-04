@@ -168,7 +168,7 @@ const GallerySection: React.FC = () => {
       translateX = 0;
       rotateY = 0;
       opacity = 1;
-      zIndex = 10;
+      zIndex = 30; // Valor más alto para la imagen central
       scale = 1;
     } else if (absoluteDiff <= 2) {
       // Efecto circular
@@ -176,12 +176,12 @@ const GallerySection: React.FC = () => {
       translateZ = -radius * (1 - Math.cos(angle)) / 2;
       translateX = radius * Math.sin(angle);
       rotateY = -indexDiff * 35;
-      opacity = 1 - (absoluteDiff * 0.15);
+      opacity = 1 - (absoluteDiff * 0.18); // Más transparencia para diferenciar mejor
       
-      // Ajuste crítico: asignar z-index en función de la distancia
-      // Los elementos más lejanos tienen menor z-index
-      zIndex = 9 - absoluteDiff * 2;
-      scale = 0.9 - (absoluteDiff * 0.15);
+      // Ajuste crítico: asignar z-index en función de la distancia Y LA POSICIÓN
+      // Asegurar que las imágenes laterales nunca estén por encima de la central
+      zIndex = indexDiff < 0 ? 10 - absoluteDiff * 2 : 8 - absoluteDiff * 2;
+      scale = 0.92 - (absoluteDiff * 0.16);
     } else {
       // Imágenes muy alejadas
       translateZ = -400;
@@ -201,24 +201,23 @@ const GallerySection: React.FC = () => {
   };
 
   // Calcular dimensiones apropiadas para imágenes en carrusel
-  const getSlideInnerStyle = (slide: GalleryImage): React.CSSProperties => {
-    if (slide.isPortrait) {
-      return {
-        width: '360px',  // Más estrecho para fotos verticales
-        height: '620px', // ⚠️ AUMENTADO: altura para fotos verticales (antes 540px)
-        overflow: 'hidden',
-        borderRadius: '20px'
-      };
-    } else {
-      return {
-        width: '520px',  // Más ancho para fotos horizontales
-        height: '370px', // Menos alto para fotos horizontales
-        overflow: 'hidden',
-        borderRadius: '20px'
-      };
-    }
-  };
-
+const getSlideInnerStyle = (slide: GalleryImage): React.CSSProperties => {
+  if (slide.isPortrait) {
+    return {
+      width: '360px',  // Más estrecho para fotos verticales
+      height: '423px', // Aumentar la altura para fotos verticales (antes 540px)
+      overflow: 'hidden',
+      borderRadius: '25px'
+    };
+  } else {
+    return {
+      width: '523px',  // Más ancho para fotos horizontales
+      height: '370px', // Menos alto para fotos horizontales
+      overflow: 'hidden',
+      borderRadius: '25px'
+    };
+  }
+};
   const isVisible = (index: number) => {
     return getVisibleSlideIndices().includes(index);
   };
@@ -437,16 +436,16 @@ const GallerySection: React.FC = () => {
       </div>
       
       <div className="relative container mx-auto max-w-7xl px-4">
-        <div className="text-center mb-16">
-          <h2 className="gallery-title reveal-on-scroll">
-            <span className="gallery-title-primary">Galería de</span>
-            <span className="gallery-title-secondary">Imágenes</span>
-          </h2>
-        </div>
+    <div className="text-center mb-8"> {/* Cambiado de mb-16 a mb-8 */}
+  <h2 className="gallery-title reveal-on-scroll">
+    <span className="gallery-title-primary">Galería de</span>
+    <span className="gallery-title-secondary">Imágenes</span>
+  </h2>
+</div>
         
         {/* Filtros de categoría */}
         {categories.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2 mb-8 reveal-on-scroll">
+          <div className="flex flex-wrap justify-center gap-2 mb-4 reveal-on-scroll">
             <button
               onClick={() => setActiveCategory(null)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -588,8 +587,6 @@ const GallerySection: React.FC = () => {
                           <div className="carousel-3d-overlay"></div>
                           <div className="light-effect"></div>
                           <div className="carousel-3d-reflection"></div>
-                          
-                          {/* Se eliminan los títulos de las imágenes como solicitado */}
                         </div>
                       )}
                     </div>
@@ -671,8 +668,6 @@ const GallerySection: React.FC = () => {
                   <span className="text-xl">Imagen no disponible</span>
                 </div>
               )}
-              
-              {/* Se eliminan los títulos también del modal como solicitado */}
             </div>
           </div>
         </div>
