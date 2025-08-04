@@ -1,4 +1,4 @@
-// src/components/GallerySection.tsx - Carrusel 3D Corregido
+// src/components/GallerySection.tsx
 "use client"
 import React, { useState, useEffect, useRef } from 'react';
 
@@ -77,13 +77,13 @@ const GallerySection: React.FC = () => {
 
   // Calcular índices visibles para el carrusel circular
   const getVisibleSlideIndices = () => {
-    if (galleryImages.length === 0) return [];
+    if (filteredImages.length === 0) return [];
     
-    const total = galleryImages.length;
+    const total = filteredImages.length;
     const indices = [];
     
     for (let i = -2; i <= 2; i++) {
-      const index = (currentIndex + i + total) % total;
+      const index = (adjustedCurrentIndex + i + total) % total;
       indices.push(index);
     }
     
@@ -127,24 +127,26 @@ const GallerySection: React.FC = () => {
     const visibleIndices = getVisibleSlideIndices();
     
     visibleIndices.forEach(index => {
-      const image = galleryImages[index];
-      if (image && !image.loaded && !image.error && image.isPortrait === undefined) {
-        checkImageOrientation(image.imagen, image.id);
+      if (index >= 0 && index < filteredImages.length) {
+        const image = filteredImages[index];
+        if (image && !image.loaded && !image.error && image.isPortrait === undefined) {
+          checkImageOrientation(image.imagen, image.id);
+        }
       }
     });
-  }, [currentIndex, galleryImages]);
+  }, [currentIndex, galleryImages, activeCategory]);
 
   // Calcular estilos para el efecto 3D
   const getImageStyle = (index: number): React.CSSProperties => {
-    if (galleryImages.length === 0) return {};
+    if (filteredImages.length === 0) return {};
     
-    let indexDiff = index - currentIndex;
+    let indexDiff = index - adjustedCurrentIndex;
     
     // Ajuste para el carrusel circular
-    if (indexDiff > galleryImages.length / 2) {
-      indexDiff -= galleryImages.length;
-    } else if (indexDiff < -galleryImages.length / 2) {
-      indexDiff += galleryImages.length;
+    if (indexDiff > filteredImages.length / 2) {
+      indexDiff -= filteredImages.length;
+    } else if (indexDiff < -filteredImages.length / 2) {
+      indexDiff += filteredImages.length;
     }
     
     const absoluteDiff = Math.abs(indexDiff);
@@ -158,7 +160,7 @@ const GallerySection: React.FC = () => {
     const radius = 800;
     
     // Verificar si la imagen actual es vertical
-    const isVertical = galleryImages[index]?.isPortrait;
+    const isVertical = filteredImages[index]?.isPortrait;
     
     if (indexDiff === 0) {
       // Imagen central
@@ -200,7 +202,7 @@ const GallerySection: React.FC = () => {
     if (slide.isPortrait) {
       return {
         width: '360px',  // Más estrecho para fotos verticales
-        height: '540px', // Más alto para fotos verticales
+        height: '540px', // Aumentada la altura para fotos verticales (antes 540px)
         overflow: 'hidden',
         borderRadius: '20px'
       };
@@ -219,10 +221,10 @@ const GallerySection: React.FC = () => {
   };
 
   const nextSlide = () => {
-    if (isTransitioning || galleryImages.length === 0) return;
+    if (isTransitioning || filteredImages.length === 0) return;
     setIsTransitioning(true);
     
-    setCurrentIndex((prev) => (prev + 1) % galleryImages.length);
+    setCurrentIndex((prev) => (prev + 1) % filteredImages.length);
     
     setTimeout(() => {
       setIsTransitioning(false);
@@ -230,10 +232,10 @@ const GallerySection: React.FC = () => {
   };
 
   const prevSlide = () => {
-    if (isTransitioning || galleryImages.length === 0) return;
+    if (isTransitioning || filteredImages.length === 0) return;
     setIsTransitioning(true);
     
-    setCurrentIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+    setCurrentIndex((prev) => (prev - 1 + filteredImages.length) % filteredImages.length);
     
     setTimeout(() => {
       setIsTransitioning(false);
@@ -241,7 +243,7 @@ const GallerySection: React.FC = () => {
   };
 
   const goToSlide = (index: number) => {
-    if (isTransitioning || index === currentIndex) return;
+    if (isTransitioning || index === adjustedCurrentIndex) return;
     setIsTransitioning(true);
     
     setCurrentIndex(index);
@@ -266,20 +268,22 @@ const GallerySection: React.FC = () => {
   };
 
   const nextModalSlide = () => {
-    const nextIndex = (activeSlideIndex + 1) % galleryImages.length;
-    setActiveSlide(galleryImages[nextIndex]);
+    if (filteredImages.length === 0) return;
+    const nextIndex = (activeSlideIndex + 1) % filteredImages.length;
+    setActiveSlide(filteredImages[nextIndex]);
     setActiveSlideIndex(nextIndex);
   };
 
   const prevModalSlide = () => {
-    const prevIndex = (activeSlideIndex - 1 + galleryImages.length) % galleryImages.length;
-    setActiveSlide(galleryImages[prevIndex]);
+    if (filteredImages.length === 0) return;
+    const prevIndex = (activeSlideIndex - 1 + filteredImages.length) % filteredImages.length;
+    setActiveSlide(filteredImages[prevIndex]);
     setActiveSlideIndex(prevIndex);
   };
 
   const startAutoplay = () => {
     stopAutoplay();
-    if (galleryImages.length > 0) {
+    if (filteredImages.length > 0) {
       autoplayIntervalRef.current = setInterval(() => {
         nextSlide();
       }, 5000);
@@ -299,13 +303,7 @@ const GallerySection: React.FC = () => {
     : galleryImages;
 
   // Índice actual ajustado para las imágenes filtradas
-  const adjustedCurrentIndex = activeCategory
-    ? filteredImages.findIndex(img => 
-        galleryImages[currentIndex].id === img.id
-      ) !== -1 
-        ? filteredImages.findIndex(img => galleryImages[currentIndex].id === img.id)
-        : 0
-    : currentIndex;
+  const adjustedCurrentIndex = Math.min(currentIndex, filteredImages.length - 1);
 
   // Efectos y listeners
   useEffect(() => {
@@ -334,15 +332,15 @@ const GallerySection: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activeSlide, currentIndex, galleryImages]);
+  }, [activeSlide, currentIndex, filteredImages]);
 
   // Autoplay
   useEffect(() => {
-    if (!loading && galleryImages.length > 0) {
+    if (!loading && filteredImages.length > 0) {
       startAutoplay();
     }
     return () => stopAutoplay();
-  }, [loading, galleryImages.length]);
+  }, [loading, filteredImages.length, activeCategory]);
 
   // Implementar reveal on scroll
   useEffect(() => {
@@ -513,91 +511,93 @@ const GallerySection: React.FC = () => {
               </button>
               
               <div className="carousel-3d-stage">
-                {filteredImages.map((slide, index) => (
-                  <div
-                    key={slide.id}
-                    className={`carousel-3d-slide ${index === adjustedCurrentIndex ? 'active' : ''} ${slide.isPortrait ? 'portrait' : 'landscape'}`}
-                    style={{
-                      ...getImageStyle(index),
-                      marginLeft: slide.isPortrait ? '-160px' : '-260px' // Ajuste para centrar correctamente según orientación
-                    }}
-                    onClick={() => index === adjustedCurrentIndex ? openSlide(slide, index) : goToSlide(index)}
-                  >
-                    {isVisible(index) && (
-                      <div 
-                        className="carousel-3d-slide-inner"
-                        style={getSlideInnerStyle(slide)}
-                      >
-                        <img 
-                          src={slide.imagen} 
-                          alt={slide.titulo} 
-                          className={`carousel-3d-image ${slide.loaded ? 'loaded' : ''}`}
-                          style={{
-                            objectFit: 'cover',
-                            width: '100%',
-                            height: '100%'
-                          }}
-                          onLoad={(e) => {
-                            // Marcar la imagen como cargada y verificar orientación
-                            const target = e.target as HTMLImageElement;
-                            const isPortrait = target.naturalHeight > target.naturalWidth;
-                            console.log(`Imagen ID ${slide.id} cargada: ${slide.imagen}`, `Dimensiones: ${target.naturalWidth}x${target.naturalHeight}`, `Es vertical: ${isPortrait}`);
-                            
-                            setGalleryImages(prev => 
-                              prev.map(image => 
-                                image.id === slide.id 
-                                  ? { ...image, isPortrait, loaded: true } 
-                                  : image
-                              )
-                            );
-                          }}
-                          onError={() => {
-                            setGalleryImages(prev => 
-                              prev.map(image => 
-                                image.id === slide.id 
-                                  ? { ...image, error: true } 
-                                  : image
-                              )
-                            );
-                          }}
-                        />
-                        
-                        {!slide.loaded && !slide.error && (
-                          <div className="carousel-3d-loader">
-                            <div className="carousel-3d-spinner"></div>
-                          </div>
-                        )}
-                        
-                        {slide.error && (
-                          <div className="image-error-container">
-                            <svg className="image-error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                            </svg>
-                            <span>Imagen no disponible</span>
-                          </div>
-                        )}
-                        
-                        <div className="carousel-3d-overlay"></div>
-                        <div className="light-effect"></div>
-                        <div className="carousel-3d-reflection"></div>
-                        
-                        {/* Mostrar título en hover solo cuando no es numérico y no es el nombre de una categoría */}
-                        {slide.titulo && 
-                          !isNaN(Number(slide.titulo)) && 
-                          slide.titulo !== "VILLA EL SALVADOR" && 
-                          !categories.includes(slide.titulo) ? null : (
-                            <div className="carousel-3d-caption">
-                              <h3 className="carousel-3d-title">{slide.titulo}</h3>
-                              {slide.categoria && (
-                                <span className="carousel-3d-category">{slide.categoria}</span>
-                              )}
+                {filteredImages.map((slide, index) => {
+                  // Calculamos si es un portrait o landscape
+                  const isPortrait = slide.isPortrait;
+                  
+                  // Calculamos el margen izquierdo según orientación
+                  const marginLeft = isPortrait ? '-180px' : '-260px';
+                  
+                  return (
+                    <div
+                      key={slide.id}
+                      className={`carousel-3d-slide ${index === adjustedCurrentIndex ? 'active' : ''} ${isPortrait ? 'portrait' : 'landscape'}`}
+                      style={{
+                        ...getImageStyle(index),
+                        marginLeft: marginLeft
+                      }}
+                      onClick={() => index === adjustedCurrentIndex ? openSlide(slide, index) : goToSlide(index)}
+                    >
+                      {isVisible(index) && (
+                        <div 
+                          className="carousel-3d-slide-inner"
+                          style={getSlideInnerStyle(slide)}
+                        >
+                          <img 
+                            src={slide.imagen} 
+                            alt={slide.titulo} 
+                            className={`carousel-3d-image ${slide.loaded ? 'loaded' : ''}`}
+                            style={{
+                              objectFit: 'cover',
+                              width: '100%',
+                              height: '100%'
+                            }}
+                            onLoad={(e) => {
+                              // Marcar la imagen como cargada y verificar orientación
+                              const target = e.target as HTMLImageElement;
+                              const isPortrait = target.naturalHeight > target.naturalWidth;
+                              console.log(`Imagen ID ${slide.id} cargada: ${slide.imagen}`, `Dimensiones: ${target.naturalWidth}x${target.naturalHeight}`, `Es vertical: ${isPortrait}`);
+                              
+                              setGalleryImages(prev => 
+                                prev.map(image => 
+                                  image.id === slide.id 
+                                    ? { ...image, isPortrait, loaded: true } 
+                                    : image
+                                )
+                              );
+                            }}
+                            onError={() => {
+                              setGalleryImages(prev => 
+                                prev.map(image => 
+                                  image.id === slide.id 
+                                    ? { ...image, error: true } 
+                                    : image
+                                )
+                              );
+                            }}
+                          />
+                          
+                          {!slide.loaded && !slide.error && (
+                            <div className="carousel-3d-loader">
+                              <div className="carousel-3d-spinner"></div>
                             </div>
-                          )
-                        }
-                      </div>
-                    )}
-                  </div>
-                ))}
+                          )}
+                          
+                          {slide.error && (
+                            <div className="image-error-container">
+                              <svg className="image-error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                              </svg>
+                              <span>Imagen no disponible</span>
+                            </div>
+                          )}
+                          
+                          <div className="carousel-3d-overlay"></div>
+                          <div className="light-effect"></div>
+                          <div className="carousel-3d-reflection"></div>
+                          
+                          {/* Mostrar título en hover */}
+                          <div className="carousel-3d-caption">
+                            <h3 className="carousel-3d-title">{slide.titulo}</h3>
+                            {slide.categoria && (
+                              <span className="carousel-3d-category">{slide.categoria}</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -656,8 +656,8 @@ const GallerySection: React.FC = () => {
                 alt={activeSlide.titulo} 
                 className="modal-image"
                 style={{
-                  maxHeight: '85vh',
-                  maxWidth: '90vw',
+                  maxHeight: activeSlide.isPortrait ? '85vh' : '80vh',
+                  maxWidth: activeSlide.isPortrait ? '70vw' : '90vw',
                   objectFit: 'contain',
                   margin: '0 auto'
                 }}
@@ -675,23 +675,18 @@ const GallerySection: React.FC = () => {
                 </div>
               )}
               
-              {/* Solo mostrar información si el título no es un número y no es el nombre de una categoría */}
-              {activeSlide.titulo && 
-                !isNaN(Number(activeSlide.titulo)) && 
-                activeSlide.titulo !== "VILLA EL SALVADOR" && 
-                !categories.includes(activeSlide.titulo) ? null : (
-                  <div className="modal-info">
-                    <h3 className="text-xl font-bold text-white">{activeSlide.titulo}</h3>
-                    {activeSlide.descripcion && (
-                      <p className="text-gray-300 mt-2">{activeSlide.descripcion}</p>
-                    )}
-                    {activeSlide.categoria && (
-                      <span className="inline-block mt-3 px-3 py-1 bg-secondary/30 text-secondary text-sm rounded-full">
-                        {activeSlide.categoria}
-                      </span>
-                    )}
-                  </div>
+              {/* Mostrar información */}
+              <div className="modal-info">
+                <h3 className="text-xl font-bold text-white">{activeSlide.titulo}</h3>
+                {activeSlide.descripcion && (
+                  <p className="text-gray-300 mt-2">{activeSlide.descripcion}</p>
                 )}
+                {activeSlide.categoria && (
+                  <span className="inline-block mt-3 px-3 py-1 bg-secondary/30 text-secondary text-sm rounded-full">
+                    {activeSlide.categoria}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

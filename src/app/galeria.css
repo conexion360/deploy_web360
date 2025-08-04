@@ -25,7 +25,7 @@
 .carousel-3d-stage {
   position: relative;
   width: 100%;
-  height: 85%;
+  height: 90%;
   perspective: 1200px;
   transform-style: preserve-3d;
   display: flex;
@@ -461,52 +461,36 @@
   opacity: 0.2;
   pointer-events: none;
 }
+
 /* ===== ESTILOS DEL CARRUSEL 3D ===== */
 .carousel-3d-container {
   position: relative;
-  height: 600px;
+  height: 650px; /* Aumentada para fotos verticales (antes 600px) */
   width: 100%;
   margin: 0 auto;
   padding: 0 60px;
   overflow: hidden;
   perspective: 1400px;
 }
-/* Estilos adicionales para el carrusel 3D mejorado - añadir a galeria.css */
 
 /* Ajustes para fotos verticales vs horizontales */
 .carousel-3d-slide.portrait .carousel-3d-slide-inner {
-  width: 370px;
-  height: 520px;
+  width: 360px;  /* Más estrecho para fotos verticales */
+  height: 580px; /* Aumentada la altura para fotos verticales (antes 520px) */
 }
 
 .carousel-3d-slide.landscape .carousel-3d-slide-inner {
-  width: 520px;
-  height: 370px;
-}
-
-/* Por defecto, si no se ha detectado la orientación */
-.carousel-3d-slide .carousel-3d-slide-inner {
-  width: 520px;
-  height: 370px;
+  width: 520px;  /* Más ancho para fotos horizontales */
+  height: 370px; /* Menos alto para fotos horizontales */
 }
 
 /* Ajuste para la posición central de las imágenes */
 .carousel-3d-slide.portrait {
-  margin-left: -185px;  /* La mitad del ancho */
+  margin-left: -180px !important;  /* La mitad del ancho para centrarla */
 }
 
 .carousel-3d-slide.landscape {
-  margin-left: -260px;  /* La mitad del ancho */
-}
-
-/* Por defecto para fotos no clasificadas */
-.carousel-3d-slide {
-  margin-left: -260px;
-}
-
-/* Ajustes para el contenedor del carrusel */
-.carousel-3d-container {
-  height: 600px;
+  margin-left: -260px !important;  /* La mitad del ancho para centrarla */
 }
 
 /* Mejora para que las imágenes se ajusten correctamente */
@@ -538,6 +522,7 @@
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
   text-align: left;
+  pointer-events: none; /* Evita que bloquee clics */
 }
 
 .carousel-3d-slide:hover .carousel-3d-caption {
@@ -588,15 +573,18 @@
 }
 
 .portrait .modal-image {
-  max-height: 80vh;
+  max-height: 85vh;
+  max-width: 70vw;
   width: auto;
 }
 
 .landscape .modal-image {
   max-width: 90%;
+  max-height: 80vh;
   height: auto;
 }
 
+/* Modal info siempre visible */
 .modal-info {
   position: absolute;
   bottom: 0;
@@ -607,132 +595,14 @@
   color: white;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
-}
-
-/* Navegación en el modal */
-.modal-nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 20;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.modal-nav-btn:hover {
-  background-color: rgba(16, 205, 208, 0.9);
-  color: #001642;
-  transform: translateY(-50%) scale(1.1);
-}
-
-.modal-prev-btn {
-  left: 20px;
-}
-
-.modal-next-btn {
-  right: 20px;
-}
-
-/* Indicador de carga e imágenes no disponibles mejorado */
-.image-error-container {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(22, 31, 45, 0.8);
-  color: white;
-  border-radius: 20px;
   z-index: 10;
-}
-
-.image-error-icon {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 1rem;
-  opacity: 0.6;
-}
-
-/* Mejoras visuales para los botones de categoría */
-.category-button {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.category-button::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 0;
-  background-color: rgba(16, 205, 208, 0.2);
-  transition: height 0.3s ease;
-  z-index: -1;
-  border-radius: 9999px;
-}
-
-.category-button:hover::after {
-  height: 100%;
-}
-
-/* Indicadores de paginación */
-.carousel-pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.carousel-pagination-bullet {
-  width: 10px;
-  height: 10px;
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  margin: 0 5px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.carousel-pagination-bullet.active {
-  background-color: #10CDD0;
-  transform: scale(1.3);
-}
-
-/* Efecto de brillo */
-.light-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 20px;
-  box-shadow: 0 0 20px rgba(16, 205, 208, 0.3);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.carousel-3d-slide.active:hover .light-glow {
-  opacity: 1;
 }
 
 /* Mejoras responsivas */
 @media (max-width: 1024px) {
   .carousel-3d-slide.portrait .carousel-3d-slide-inner {
     width: 280px;
-    height: 420px;
+    height: 480px; /* Aumentada para evitar recortes */
   }
   
   .carousel-3d-slide.landscape .carousel-3d-slide-inner {
@@ -741,18 +611,22 @@
   }
   
   .carousel-3d-slide.portrait {
-    margin-left: -140px;
+    margin-left: -140px !important;
   }
   
   .carousel-3d-slide.landscape {
-    margin-left: -210px;
+    margin-left: -210px !important;
+  }
+  
+  .carousel-3d-container {
+    height: 580px; /* Aumentada para acomodar las fotos verticales */
   }
 }
 
 @media (max-width: 768px) {
   .carousel-3d-slide.portrait .carousel-3d-slide-inner {
     width: 240px;
-    height: 360px;
+    height: 420px; /* Aumentada para evitar recortes */
   }
   
   .carousel-3d-slide.landscape .carousel-3d-slide-inner {
@@ -761,22 +635,22 @@
   }
   
   .carousel-3d-slide.portrait {
-    margin-left: -120px;
+    margin-left: -120px !important;
   }
   
   .carousel-3d-slide.landscape {
-    margin-left: -180px;
+    margin-left: -180px !important;
   }
   
   .carousel-3d-container {
-    height: 500px;
+    height: 520px; /* Aumentada para acomodar las fotos verticales */
   }
 }
 
 @media (max-width: 640px) {
   .carousel-3d-slide.portrait .carousel-3d-slide-inner {
     width: 200px;
-    height: 300px;
+    height: 380px; /* Aumentada para evitar recortes */
   }
   
   .carousel-3d-slide.landscape .carousel-3d-slide-inner {
@@ -785,20 +659,15 @@
   }
   
   .carousel-3d-slide.portrait {
-    margin-left: -100px;
+    margin-left: -100px !important;
   }
   
   .carousel-3d-slide.landscape {
-    margin-left: -150px;
+    margin-left: -150px !important;
   }
   
   .carousel-3d-container {
-    height: 450px;
-  }
-  
-  .modal-nav-btn {
-    width: 40px;
-    height: 40px;
+    height: 480px; /* Aumentada para acomodar las fotos verticales */
   }
 }
 
@@ -831,10 +700,4 @@
   border-top-color: #10CDD0;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
