@@ -540,7 +540,7 @@ const GallerySection: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div 
+         <div 
             className="carousel-3d-container reveal-on-scroll"
             onMouseEnter={stopAutoplay}
             onMouseLeave={startAutoplay}
@@ -579,33 +579,30 @@ const GallerySection: React.FC = () => {
                     return null;
                   }
                   
-                  // Calcular el margen izquierdo según orientación
-                  const marginLeft = isMobile ? '0' : (isPortrait ? '-180px' : '-260px');
+                  // No usar marginLeft en móvil
+                  const slideStyle = isMobile 
+                    ? {} 
+                    : {
+                        ...(getImageStyle(index)),
+                        marginLeft: isPortrait ? '-180px' : '-260px'
+                      };
                   
                   return (
                     <div
                       key={slide.id}
                       className={`carousel-3d-slide ${isActive ? 'active' : ''} ${isPortrait ? 'portrait' : 'landscape'}`}
-                      style={{
-                        ...(getImageStyle(index)),
-                        marginLeft: marginLeft
-                      }}
+                      style={slideStyle}
                       onClick={() => isActive && !isMobile ? openSlide(slide, index) : !isActive && goToSlide(index)}
                     >
                       {(isVisible(index) || isActive) && (
                         <div 
                           className="carousel-3d-slide-inner"
-                          style={getSlideInnerStyle(slide)}
+                          style={isMobile ? {} : getSlideInnerStyle(slide)}
                         >
                           <img 
                             src={slide.imagen} 
                             alt={slide.titulo} 
                             className={`carousel-3d-image ${slide.loaded ? 'loaded' : ''}`}
-                            style={{
-                              objectFit: 'cover',
-                              width: '100%',
-                              height: '100%'
-                            }}
                             onLoad={(e) => {
                               const target = e.target as HTMLImageElement;
                               const isPortrait = target.naturalHeight > target.naturalWidth;

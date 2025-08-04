@@ -45,17 +45,15 @@
   will-change: transform, opacity;
 }
 
-/* CORRECCIÓN: Sistema de z-index revisado para priorizar slides correctamente */
+/* Sistema de z-index */
 .carousel-3d-slide {
-  z-index: 1; /* Valor base para todas las slides */
+  z-index: 1;
 }
 
-/* La slide activa siempre está por encima */
 .carousel-3d-slide.active {
   z-index: 30 !important;
 }
 
-/* Las slides de la derecha tienen z-index superior a las de la izquierda */
 .carousel-3d-slide:nth-child(odd) {
   z-index: 5;
 }
@@ -64,7 +62,6 @@
   z-index: 10;
 }
 
-/* Hover aumenta el z-index pero sin superar a la activa */
 .carousel-3d-slide:hover:not(.active) {
   z-index: 20 !important;
 }
@@ -174,7 +171,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  z-index: 40; /* CORREGIDO: Aumentado para estar siempre por encima */
+  z-index: 40;
   box-shadow: 
     0 4px 15px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
@@ -363,7 +360,7 @@
   }
 }
 
-/* Responsividad */
+/* Responsividad Desktop */
 @media (max-width: 1200px) {
   .carousel-3d-slide.landscape {
     width: 440px;
@@ -391,11 +388,33 @@
   }
 }
 
+/* ===== ESTILOS MÓVIL MEJORADOS ===== */
 @media (max-width: 768px) {
   .carousel-3d-container {
-    height: 450px;
-    padding: 0 40px;
+    height: 500px;
+    padding: 0;
     margin-top: 20px;
+    position: relative;
+    width: 100%;
+    overflow: visible;
+  }
+  
+  .carousel-3d-wrapper {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    position: relative;
+  }
+  
+  .carousel-3d-stage {
+    width: 100%;
+    height: 100%;
+    perspective: none;
+    transform-style: flat;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   
   /* Solo mostrar la imagen activa en móviles */
@@ -403,72 +422,78 @@
     display: none !important;
   }
   
-  /* Centrar la imagen activa */
+  /* Imagen activa centrada */
   .carousel-3d-slide.active {
     position: relative !important;
     transform: none !important;
     opacity: 1 !important;
-    margin: 0 auto !important;
-    left: 50% !important;
-    width: 85vw !important;
-    max-width: 350px !important;
-    height: auto !important;
-  }
-  
-  .carousel-3d-slide.active.landscape {
-    width: 85vw !important;
-    max-width: 350px !important;
-    height: auto !important;
-    margin-left: -42.5vw !important;
-    max-height: 280px !important;
-  }
-  
-  .carousel-3d-slide.active.portrait {
-    width: 70vw !important;
-    max-width: 280px !important;
-    height: auto !important;
-    margin-left: -35vw !important;
-    max-height: 400px !important;
-  }
-  
-  .carousel-3d-slide-inner {
+    left: 0 !important;
+    margin: 0 !important;
     width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  
+  /* Contenedor interno de la imagen */
+  .carousel-3d-slide-inner {
+    width: 85% !important;
+    max-width: 350px !important;
     height: auto !important;
-    aspect-ratio: 4/3;
+    margin: 0 auto !important;
+    position: relative !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
   }
   
+  /* Imágenes horizontales */
+  .carousel-3d-slide.landscape .carousel-3d-slide-inner {
+    aspect-ratio: 16/9 !important;
+    width: 90% !important;
+    max-width: 380px !important;
+  }
+  
+  /* Imágenes verticales */
   .carousel-3d-slide.portrait .carousel-3d-slide-inner {
-    aspect-ratio: 3/4;
+    aspect-ratio: 9/16 !important;
+    width: 70% !important;
+    max-width: 280px !important;
+    max-height: 450px !important;
   }
   
+  /* Imagen dentro del contenedor */
   .carousel-3d-image {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
+    border-radius: 20px !important;
+    position: relative !important;
   }
   
-  /* Botones de navegación más visibles */
+  /* Botones de navegación móvil */
   .carousel-nav-btn {
-    width: 45px;
-    height: 45px;
+    width: 50px;
+    height: 50px;
     background-color: rgba(16, 205, 208, 0.8);
     backdrop-filter: blur(10px);
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 50;
   }
   
-  .carousel-nav-btn:hover {
-    background-color: rgba(16, 205, 208, 0.95);
+  .carousel-prev-btn {
+    left: 10px;
+  }
+  
+  .carousel-next-btn {
+    right: 10px;
   }
   
   .carousel-nav-btn svg {
     width: 24px;
     height: 24px;
-  }
-  
-  .carousel-3d-stage {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   
   /* Ocultar efectos 3D innecesarios */
@@ -477,30 +502,75 @@
   .carousel-3d-reflection {
     display: none !important;
   }
+  
+  /* Sección de galería */
+  .gallery-section {
+    padding: 4rem 0 6rem 0;
+    min-height: auto;
+  }
+  
+  /* Título */
+  .gallery-title {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Contenedor de filtros */
+  .gallery-filters {
+    margin-bottom: 1rem;
+  }
 }
 
+/* Móviles pequeños */
 @media (max-width: 640px) {
   .carousel-3d-container {
-    height: 380px;
-    padding: 0 20px;
-    margin-top: 30px;
+    height: 450px;
   }
   
-  /* Ajustar tamaños para móviles pequeños */
-  .carousel-3d-slide.active.landscape {
-    width: 90vw !important;
+  /* Imágenes horizontales en móviles pequeños */
+  .carousel-3d-slide.landscape .carousel-3d-slide-inner {
+    width: 95% !important;
+    max-width: 340px !important;
+  }
+  
+  /* Imágenes verticales en móviles pequeños */
+  .carousel-3d-slide.portrait .carousel-3d-slide-inner {
+    width: 75% !important;
+    max-width: 260px !important;
+    max-height: 400px !important;
+  }
+  
+  /* Botones más pequeños */
+  .carousel-nav-btn {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .carousel-nav-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Móviles muy pequeños */
+@media (max-width: 480px) {
+  .carousel-3d-container {
+    height: 400px;
+  }
+  
+  .carousel-3d-slide.landscape .carousel-3d-slide-inner {
+    width: 98% !important;
     max-width: 320px !important;
-    margin-left: -45vw !important;
-    max-height: 240px !important;
+    aspect-ratio: 16/10 !important;
   }
   
-  .carousel-3d-slide.active.portrait {
-    width: 75vw !important;
-    max-width: 250px !important;
-    margin-left: -37.5vw !important;
-    max-height: 350px !important;
+  .carousel-3d-slide.portrait .carousel-3d-slide-inner {
+    width: 80% !important;
+    max-width: 240px !important;
+    max-height: 360px !important;
   }
   
+  /* Botones aún más pequeños */
   .carousel-nav-btn {
     width: 40px;
     height: 40px;
@@ -512,10 +582,6 @@
   
   .carousel-next-btn {
     right: 5px;
-  }
-  
-  .gallery-section {
-    padding-bottom: 6rem;
   }
 }
 
@@ -554,9 +620,9 @@
 /* Estilos adicionales para el fondo de la galería */
 .gallery-section {
   position: relative;
-  padding: 6rem 0; /* CORREGIDO: Reducido el padding vertical */
+  padding: 6rem 0;
   overflow: hidden;
-  min-height: 650px; /* CORREGIDO: Reducida la altura mínima */
+  min-height: 650px;
 }
 
 .gallery-background {
@@ -577,6 +643,7 @@
   opacity: 0.3;
 }
 
+/* Título centrado */
 .gallery-title {
   position: relative;
   display: inline-block;
@@ -594,7 +661,7 @@
   margin-left: 0.5rem;
 }
 
-/* Efectos de partículas flotantes (usar con JS) */
+/* Efectos de partículas flotantes */
 .gallery-particle {
   position: absolute;
   background-color: rgba(16, 205, 208, 0.3);
@@ -603,39 +670,41 @@
   pointer-events: none;
 }
 
-/* ===== ESTILOS DEL CARRUSEL 3D ===== */
-.carousel-3d-container {
-  position: relative;
-  height: 460px; /* CORREGIDO: altura optimizada */
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 60px;
-  overflow: hidden;
-  perspective: 1400px;
-}
+/* ===== ESTILOS DEL CARRUSEL 3D DESKTOP ===== */
+@media (min-width: 769px) {
+  .carousel-3d-container {
+    position: relative;
+    height: 460px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 60px;
+    overflow: hidden;
+    perspective: 1400px;
+  }
 
-/* Ajustes para fotos verticales vs horizontales */
-.carousel-3d-slide.portrait .carousel-3d-slide-inner {
-  width: 340px;  /* CORREGIDO: Reducido ligeramente */
-  height: 460px; /* CORREGIDO: Reducido para mejor proporción */
-  overflow: hidden;
-  border-radius: 25px;
-}
+  /* Ajustes para fotos verticales vs horizontales */
+  .carousel-3d-slide.portrait .carousel-3d-slide-inner {
+    width: 340px;
+    height: 460px;
+    overflow: hidden;
+    border-radius: 25px;
+  }
 
-.carousel-3d-slide.landscape .carousel-3d-slide-inner {
-  width: 520px;
-  height: 370px;
-  overflow: hidden;
-  border-radius: 25px;
-}
+  .carousel-3d-slide.landscape .carousel-3d-slide-inner {
+    width: 520px;
+    height: 370px;
+    overflow: hidden;
+    border-radius: 25px;
+  }
 
-/* Ajuste para la posición central de las imágenes */
-.carousel-3d-slide.portrait {
-  margin-left: -170px !important; /* CORREGIDO: Ajustado para centrar */
-}
+  /* Ajuste para la posición central de las imágenes */
+  .carousel-3d-slide.portrait {
+    margin-left: -170px !important;
+  }
 
-.carousel-3d-slide.landscape {
-  margin-left: -260px !important;
+  .carousel-3d-slide.landscape {
+    margin-left: -260px !important;
+  }
 }
 
 /* Mejora para que las imágenes se ajusten correctamente */
@@ -687,68 +756,6 @@
   max-width: 90%;
   max-height: 80vh;
   height: auto;
-}
-
-/* Mejoras específicas para móviles */
-@media (max-width: 480px) {
-  .gallery-section {
-    padding: 4rem 0;
-    min-height: 500px;
-  }
-  
-  .gallery-title {
-    font-size: 1.75rem;
-  }
-  
-  .carousel-3d-container {
-    height: 360px;
-    padding: 0 25px;
-    margin-top: 30px; /* Más espacio superior */
-  }
-  
-  /* Cambios radicales para móviles pequeños: simplificar a carrusel plano */
-  .carousel-3d-slide {
-    transform-style: flat !important; /* Eliminar efecto 3D para móviles pequeños */
-  }
-  
-  .carousel-3d-slide.landscape {
-    width: 220px;
-    height: 150px;
-    margin-left: -110px !important;
-  }
-  
-  .carousel-3d-slide.portrait {
-    width: 160px;
-    height: 230px;
-    margin-left: -80px !important;
-  }
-  
-  /* Simplificar enormemente para dispositivos muy pequeños */
-  .carousel-3d-slide:not(.active) {
-    display: none !important; /* Ocultar todas las slides excepto la activa */
-  }
-  
-  /* Solo mostrar flechas de navegación */
-  .carousel-nav-btn {
-    width: 32px;
-    height: 32px;
-    z-index: 100; /* Asegurar que estén por encima */
-    background-color: rgba(16, 205, 208, 0.7); /* Más visible */
-  }
-  
-  .carousel-nav-btn svg {
-    width: 16px;
-    height: 16px;
-  }
-  
-  /* Ajustes para modal en dispositivos muy pequeños */
-  .portrait .modal-image {
-    max-width: 85vw;
-  }
-  
-  .landscape .modal-image {
-    max-width: 95vw;
-  }
 }
 
 /* Carga progresiva para mejorar la experiencia */
