@@ -178,9 +178,10 @@ const GallerySection: React.FC = () => {
       rotateY = -indexDiff * 35;
       opacity = 1 - (absoluteDiff * 0.18); // Más transparencia para diferenciar mejor
       
-      // Ajuste crítico: asignar z-index en función de la distancia Y LA POSICIÓN
-      // Asegurar que las imágenes laterales nunca estén por encima de la central
-      zIndex = indexDiff < 0 ? 10 - absoluteDiff * 2 : 8 - absoluteDiff * 2;
+      // CORRECCIÓN: Asignación de z-index según la posición
+      // Crucial: imágenes a la izquierda (negativo) tienen z-index menor que las de la derecha
+      // Esto asegura que las imágenes "traseras" (a la izquierda) estén por detrás de las imágenes "delanteras" (a la derecha)
+      zIndex = 20 - (absoluteDiff * 5) - (indexDiff < 0 ? 10 : 0);
       scale = 0.92 - (absoluteDiff * 0.16);
     } else {
       // Imágenes muy alejadas
@@ -201,23 +202,24 @@ const GallerySection: React.FC = () => {
   };
 
   // Calcular dimensiones apropiadas para imágenes en carrusel
-const getSlideInnerStyle = (slide: GalleryImage): React.CSSProperties => {
-  if (slide.isPortrait) {
-    return {
-      width: '360px',  // Más estrecho para fotos verticales
-      height: '423px', // Aumentar la altura para fotos verticales (antes 540px)
-      overflow: 'hidden',
-      borderRadius: '25px'
-    };
-  } else {
-    return {
-      width: '523px',  // Más ancho para fotos horizontales
-      height: '370px', // Menos alto para fotos horizontales
-      overflow: 'hidden',
-      borderRadius: '25px'
-    };
-  }
-};
+  const getSlideInnerStyle = (slide: GalleryImage): React.CSSProperties => {
+    if (slide.isPortrait) {
+      return {
+        width: '360px',  // Más estrecho para fotos verticales
+        height: '423px', // Aumentar la altura para fotos verticales (antes 540px)
+        overflow: 'hidden',
+        borderRadius: '25px'
+      };
+    } else {
+      return {
+        width: '523px',  // Más ancho para fotos horizontales
+        height: '370px', // Menos alto para fotos horizontales
+        overflow: 'hidden',
+        borderRadius: '25px'
+      };
+    }
+  };
+
   const isVisible = (index: number) => {
     return getVisibleSlideIndices().includes(index);
   };
@@ -436,12 +438,12 @@ const getSlideInnerStyle = (slide: GalleryImage): React.CSSProperties => {
       </div>
       
       <div className="relative container mx-auto max-w-7xl px-4">
-    <div className="text-center mb-8"> {/* Cambiado de mb-16 a mb-8 */}
-  <h2 className="gallery-title reveal-on-scroll">
-    <span className="gallery-title-primary">Galería de</span>
-    <span className="gallery-title-secondary">Imágenes</span>
-  </h2>
-</div>
+        <div className="text-center mb-8">
+          <h2 className="gallery-title reveal-on-scroll">
+            <span className="gallery-title-primary">Galería de</span>
+            <span className="gallery-title-secondary">Imágenes</span>
+          </h2>
+        </div>
         
         {/* Filtros de categoría */}
         {categories.length > 0 && (

@@ -36,30 +36,37 @@
 /* Tarjetas del carrusel */
 .carousel-3d-slide {
   position: absolute;
-  width: 520px;
-  height: 370px;
   transition: all 0.8s cubic-bezier(0.215, 0.610, 0.355, 1.000);
   cursor: pointer;
   transform-style: preserve-3d;
   backface-visibility: hidden;
   left: 50%;
   transform-origin: center center;
-  margin-left: -260px;
   will-change: transform, opacity;
 }
 
-/* Mejora: Asegurarnos de que la slide activa esté siempre por encima */
-.carousel-3d-slide.active {
-  z-index: 20 !important;
+/* CORRECCIÓN: Sistema de z-index revisado para priorizar slides correctamente */
+.carousel-3d-slide {
+  z-index: 1; /* Valor base para todas las slides */
 }
 
-/* Ajuste: Las slides no activas deben tener z-index decreciente a medida que se alejan */
-.carousel-3d-slide:not(.active) {
+/* La slide activa siempre está por encima */
+.carousel-3d-slide.active {
+  z-index: 30 !important;
+}
+
+/* Las slides de la derecha tienen z-index superior a las de la izquierda */
+.carousel-3d-slide:nth-child(odd) {
   z-index: 5;
 }
 
-.carousel-3d-slide:hover {
-  z-index: 15 !important;
+.carousel-3d-slide:nth-child(even) {
+  z-index: 10;
+}
+
+/* Hover aumenta el z-index pero sin superar a la activa */
+.carousel-3d-slide:hover:not(.active) {
+  z-index: 20 !important;
 }
 
 .carousel-3d-slide-inner {
@@ -167,7 +174,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  z-index: 30; /* Aumentado para estar siempre por encima de las slides */
+  z-index: 40; /* CORREGIDO: Aumentado para estar siempre por encima */
   box-shadow: 
     0 4px 15px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
@@ -358,10 +365,16 @@
 
 /* Responsividad */
 @media (max-width: 1200px) {
-  .carousel-3d-slide {
-    width: 480px;
-    height: 340px;
-    margin-left: -240px;
+  .carousel-3d-slide.landscape {
+    width: 440px; /* Reducido para pantallas más pequeñas */
+    height: 310px;
+    margin-left: -220px !important; /* Centrado adecuado */
+  }
+  
+  .carousel-3d-slide.portrait {
+    width: 320px; /* Reducido para pantallas más pequeñas */
+    height: 400px;
+    margin-left: -160px !important; /* Centrado adecuado */
   }
   
   .carousel-prev-btn, .modal-prev-btn {
@@ -380,31 +393,112 @@
 
 @media (max-width: 768px) {
   .carousel-3d-container {
-    height: 520px; /* Aumentado para manejar mejor imágenes verticales */
+    height: 500px; /* Aumentado para mejor visualización en móviles */
+    padding: 0 40px; /* Espacio para los botones */
+    margin-top: 10px; /* Añadir espacio superior */
   }
   
-  .carousel-3d-slide {
-    width: 360px;
-    height: 260px;
-    margin-left: -180px;
+  .carousel-3d-slide.landscape {
+    width: 300px; /* Tamaño ajustado para móviles */
+    height: 200px;
+    margin-left: -150px !important;
   }
   
-  .carousel-nav-btn, .modal-nav-btn {
-    width: 50px;
-    height: 50px;
-  }
-}
-
-@media (max-width: 640px) {
-  .carousel-3d-slide {
-    width: 300px;
-    height: 220px;
-    margin-left: -150px;
+  .carousel-3d-slide.portrait {
+    width: 220px; /* Reducido para móviles */
+    height: 320px;
+    margin-left: -110px !important;
   }
   
   .carousel-nav-btn, .modal-nav-btn {
     width: 40px;
     height: 40px;
+  }
+  
+  .carousel-nav-btn svg, .modal-nav-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* CORRECCIÓN: Ajustes específicos para móvil */
+  .carousel-3d-stage {
+    height: 100%; /* Usar toda la altura disponible */
+    transform: scale(0.9); /* Reducir ligeramente la escala para mejor visibilidad */
+  }
+  
+  /* Mejora del efecto 3D para móviles */
+  .carousel-3d-slide:not(.active) {
+    opacity: 0.7 !important; /* Mayor opacidad para mejor visibilidad */
+  }
+  
+  /* Evitar que las slides se alejen demasiado en el eje Z */
+  .carousel-3d-slide:not(.active) .carousel-3d-slide-inner {
+    transform: none !important; /* Evitar transformaciones adicionales */
+  }
+}
+
+@media (max-width: 640px) {
+  .carousel-3d-container {
+    height: 400px; /* Altura ajustada para móviles pequeños */
+    padding: 0 30px; /* Menos espacio lateral */
+    perspective: 800px; /* Perspectiva reducida para mejor efecto */
+  }
+  
+  /* Mayor simplificación para dispositivos móviles */
+  .carousel-3d-slide.landscape {
+    width: 260px; /* Tamaño reducido */
+    height: 180px;
+    margin-left: -130px !important;
+  }
+  
+  .carousel-3d-slide.portrait {
+    width: 180px; /* Tamaño reducido */
+    height: 260px;
+    margin-left: -90px !important;
+  }
+  
+  /* Simplificar el carrusel para móviles */
+  .carousel-3d-slide:not(.active) {
+    transform: translateX(0) translateZ(-100px) !important;
+    opacity: 0.4 !important;
+  }
+  
+  /* Slides anteriores (a la izquierda) */
+  .carousel-3d-slide:not(.active):nth-child(odd) {
+    transform: translateX(-120px) translateZ(-50px) rotateY(10deg) !important;
+  }
+  
+  /* Slides siguientes (a la derecha) */
+  .carousel-3d-slide:not(.active):nth-child(even) {
+    transform: translateX(120px) translateZ(-50px) rotateY(-10deg) !important;
+  }
+  
+  .carousel-nav-btn, .modal-nav-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  /* Ajustes para botones en la vista de galería en móviles pequeños */
+  .carousel-prev-btn {
+    left: 5px;
+  }
+  
+  .carousel-next-btn {
+    right: 5px;
+  }
+  
+  /* Ajustes para botones en el modal en móviles pequeños */
+  .modal-prev-btn {
+    left: 10px;
+  }
+  
+  .modal-next-btn {
+    right: 10px;
+  }
+  
+  /* Mayor espacio para el contenedor */
+  .gallery-section {
+    padding-bottom: 8rem;
   }
 }
 
@@ -419,9 +513,9 @@
 /* Estilos adicionales para el fondo de la galería */
 .gallery-section {
   position: relative;
-  padding: 8rem 0;
+  padding: 6rem 0; /* CORREGIDO: Reducido el padding vertical */
   overflow: hidden;
-  min-height: 700px;
+  min-height: 650px; /* CORREGIDO: Reducida la altura mínima */
 }
 
 .gallery-background {
@@ -471,7 +565,7 @@
 /* ===== ESTILOS DEL CARRUSEL 3D ===== */
 .carousel-3d-container {
   position: relative;
-  height: 480px; /* AJUSTADO: altura optimizada para ambos formatos */
+  height: 460px; /* CORREGIDO: altura optimizada */
   width: 100%;
   margin: 0 auto;
   padding: 0 60px;
@@ -481,26 +575,26 @@
 
 /* Ajustes para fotos verticales vs horizontales */
 .carousel-3d-slide.portrait .carousel-3d-slide-inner {
-  width: 380px;  /* Ajustado para mejor proporción circular */
-  height: 523px; /* REDUCIDO: altura para fotos verticales más proporcional */
+  width: 340px;  /* CORREGIDO: Reducido ligeramente */
+  height: 460px; /* CORREGIDO: Reducido para mejor proporción */
   overflow: hidden;
-  border-radius: 25px; /* Aumentado para mejor efecto circular */
+  border-radius: 25px;
 }
 
 .carousel-3d-slide.landscape .carousel-3d-slide-inner {
-  width: 520px;  /* Más ancho para fotos horizontales */
-  height: 370px; /* Menos alto para fotos horizontales */
+  width: 520px;
+  height: 370px;
   overflow: hidden;
-  border-radius: 25px; /* Aumentado para mejor efecto circular */
+  border-radius: 25px;
 }
 
 /* Ajuste para la posición central de las imágenes */
 .carousel-3d-slide.portrait {
-  margin-left: -190px !important;  /* Ajustado para el nuevo ancho */
+  margin-left: -170px !important; /* CORREGIDO: Ajustado para centrar */
 }
 
 .carousel-3d-slide.landscape {
-  margin-left: -260px !important;  /* La mitad del ancho para centrarla */
+  margin-left: -260px !important;
 }
 
 /* Mejora para que las imágenes se ajusten correctamente */
@@ -514,7 +608,7 @@
 }
 
 .portrait .carousel-3d-image {
-  object-position: center;  /* Centrar para verticales */
+  object-position: center;
 }
 
 /* Mejoras para el modal */
@@ -527,7 +621,7 @@
 }
 
 .modal-image-container.portrait {
-  max-height: 90vh; /* Para imágenes verticales */
+  max-height: 90vh;
 }
 
 .modal-image-container.landscape {
@@ -543,7 +637,7 @@
 }
 
 .portrait .modal-image {
-  max-height: 90vh; /* Para imágenes verticales */
+  max-height: 85vh;
   max-width: 70vw;
   width: auto;
 }
@@ -554,76 +648,65 @@
   height: auto;
 }
 
-/* Mejoras responsivas */
-@media (max-width: 1024px) {
+/* Mejoras específicas para móviles */
+@media (max-width: 480px) {
+  .gallery-section {
+    padding: 4rem 0;
+    min-height: 500px;
+  }
+  
+  .gallery-title {
+    font-size: 1.75rem;
+  }
+  
   .carousel-3d-container {
-    height: 620px; /* Altura ajustada */
+    height: 360px;
+    padding: 0 25px;
+    margin-top: 30px; /* Más espacio superior */
   }
   
-  .carousel-3d-slide.portrait .carousel-3d-slide-inner {
-    width: 300px;
-    height: 480px; /* Reducido para mantener proporciones */
-  }
-  
-  .carousel-3d-slide.landscape .carousel-3d-slide-inner {
-    width: 420px;
-    height: 280px;
-  }
-  
-  .carousel-3d-slide.portrait {
-    margin-left: -150px !important;
+  /* Cambios radicales para móviles pequeños: simplificar a carrusel plano */
+  .carousel-3d-slide {
+    transform-style: flat !important; /* Eliminar efecto 3D para móviles pequeños */
   }
   
   .carousel-3d-slide.landscape {
-    margin-left: -210px !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .carousel-3d-container {
-    height: 580px; /* Altura ajustada */
-  }
-  
-  .carousel-3d-slide.portrait .carousel-3d-slide-inner {
-    width: 240px;
-    height: 420px; /* Reducido para mantener proporciones */
-  }
-  
-  .carousel-3d-slide.landscape .carousel-3d-slide-inner {
-    width: 360px;
-    height: 240px;
+    width: 220px;
+    height: 150px;
+    margin-left: -110px !important;
   }
   
   .carousel-3d-slide.portrait {
-    margin-left: -120px !important;
+    width: 160px;
+    height: 230px;
+    margin-left: -80px !important;
   }
   
-  .carousel-3d-slide.landscape {
-    margin-left: -180px !important;
-  }
-}
-
-@media (max-width: 640px) {
-  .carousel-3d-container {
-    height: 520px; /* Altura ajustada */
+  /* Simplificar enormemente para dispositivos muy pequeños */
+  .carousel-3d-slide:not(.active) {
+    display: none !important; /* Ocultar todas las slides excepto la activa */
   }
   
-  .carousel-3d-slide.portrait .carousel-3d-slide-inner {
-    width: 200px;
-    height: 360px; /* Reducido para mantener proporciones */
+  /* Solo mostrar flechas de navegación */
+  .carousel-nav-btn {
+    width: 32px;
+    height: 32px;
+    z-index: 100; /* Asegurar que estén por encima */
+    background-color: rgba(16, 205, 208, 0.7); /* Más visible */
   }
   
-  .carousel-3d-slide.landscape .carousel-3d-slide-inner {
-    width: 300px;
-    height: 200px;
+  .carousel-nav-btn svg {
+    width: 16px;
+    height: 16px;
   }
   
-  .carousel-3d-slide.portrait {
-    margin-left: -100px !important;
+  /* Ajustes para modal en dispositivos muy pequeños */
+  .portrait .modal-image {
+    max-width: 85vw;
   }
   
-  .carousel-3d-slide.landscape {
-    margin-left: -150px !important;
+  .landscape .modal-image {
+    max-width: 95vw;
   }
 }
 
